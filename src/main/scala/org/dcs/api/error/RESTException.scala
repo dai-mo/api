@@ -7,7 +7,12 @@ package org.dcs.api.error
 case class ErrorResponse(code: String,
                          message: String,
                          httpStatusCode: Int,
-                         var errorMessage: String = "")
+                         var errorMessage: String = "") {
+  def withErrorMessage(em: String): ErrorResponse  = {
+    this.errorMessage = em
+    this
+  }
+}
 
 class RESTException(val errorResponse: ErrorResponse)
   extends Exception(errorResponse.code + ":" +

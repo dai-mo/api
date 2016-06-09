@@ -33,6 +33,7 @@ case class ProcessorType(@BeanProperty var pType:String,
 }
 
 trait FlowApiService {
+  def templates(clientId: String):List[FlowTemplate]
   def instantiate(flowTemplateId:String, clientId: String):FlowInstance
   def instance(flowInstanceId: String, clientId: String): FlowInstance
   def remove(flowInstanceId: String, clientId: String): Boolean
@@ -40,6 +41,7 @@ trait FlowApiService {
 
 trait ProcessorApiService {
   def types(clientToken: String): List[ProcessorType]
+  def typesSearchTags(str:String, clientToken: String): List[ProcessorType]
   def create(name: String, ptype: String, clientToken: String): ProcessorInstance
   def start(processorId: String, clientToken: String): ProcessorInstance
   def remove(processorId: String, clientToken: String): Boolean
