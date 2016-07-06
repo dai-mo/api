@@ -29,11 +29,12 @@ object ErrorConstants {
     val DCS105 = ErrorResponse("DCS105", "Error writing data", 500)
     val DCS106 = ErrorResponse("DCS106", "Error initialising data admin", 500)
     val DCS107 = ErrorResponse("DCS107", "Error loading / retrieving data source info", 500)
+    val DCS108 = ErrorResponse("DCS108", "Requested entity is not available", 400)
 
     /*
       Service related errors
      */
-    val DCS201 = ErrorResponse("DCS201", "Service currently unavailable", 500)
+    val DCS201 = ErrorResponse("DCS201", "Service currently unavailable", 503)
 
     /*
       Flow related errors
