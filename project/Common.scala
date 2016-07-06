@@ -13,7 +13,6 @@ object Common {
 
   lazy val commonSettings = Seq(
     organization := "org.dcs",
-    version := dcsApiVersion,
     scalaVersion := "2.11.7",
     crossPaths := false,
     checksums in update := Nil,
