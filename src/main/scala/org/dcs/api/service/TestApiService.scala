@@ -8,8 +8,5 @@ case class TestResponse(@BeanProperty var response: String) {
 }
 
 trait TestApiService {
-
   def hello(name: String): TestResponse
-
-  def error(eType: String): TestResponse
 }
