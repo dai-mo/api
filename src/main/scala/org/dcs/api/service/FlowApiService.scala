@@ -1,5 +1,7 @@
 package org.dcs.api.service
 
+import java.util.Date
+
 import scala.beans.BeanProperty
 
 /**
@@ -17,8 +19,12 @@ case class FlowInstance(@BeanProperty var id: String,
   def this() = this("", "", Nil, Nil)
 }
 
-case class FlowTemplate(@BeanProperty var id: String) {
-  def this() = this("")
+case class FlowTemplate(@BeanProperty var id: String,
+                        @BeanProperty var uri: String,
+                        @BeanProperty var name: String,
+                        @BeanProperty var description: String,
+                        @BeanProperty var timestamp: Date) {
+  def this() = this("", "", "", "", null)
 }
 
 case class ProcessorInstance(@BeanProperty var id: String,
