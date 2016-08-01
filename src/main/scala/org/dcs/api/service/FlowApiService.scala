@@ -1,13 +1,22 @@
 package org.dcs.api.service
 
+import java.util.Date
+
 import scala.beans.BeanProperty
 
 /**
   * Created by cmathew on 05/06/16.
   */
 
-case class Connection(@BeanProperty var id: String) {
-  def this() = this("")
+case class ConnectionPort(@BeanProperty var id: String,
+                          @BeanProperty var `type`: String) {
+  def this() = this("", "")
+}
+
+case class Connection(@BeanProperty var id: String,
+                      @BeanProperty var source: ConnectionPort,
+                      @BeanProperty var destination: ConnectionPort) {
+  def this() = this("", ConnectionPort("", ""), ConnectionPort("", ""))
 }
 
 case class FlowInstance(@BeanProperty var id: String,
@@ -17,8 +26,12 @@ case class FlowInstance(@BeanProperty var id: String,
   def this() = this("", "", Nil, Nil)
 }
 
-case class FlowTemplate(@BeanProperty var id: String) {
-  def this() = this("")
+case class FlowTemplate(@BeanProperty var id: String,
+                        @BeanProperty var uri: String,
+                        @BeanProperty var name: String,
+                        @BeanProperty var description: String,
+                        @BeanProperty var timestamp: Date) {
+  def this() = this("", "", "", "", null)
 }
 
 case class ProcessorInstance(@BeanProperty var id: String,
