@@ -8,8 +8,15 @@ import scala.beans.BeanProperty
   * Created by cmathew on 05/06/16.
   */
 
-case class Connection(@BeanProperty var id: String) {
-  def this() = this("")
+case class ConnectionPort(@BeanProperty var id: String,
+                          @BeanProperty var `type`: String) {
+  def this() = this("", "")
+}
+
+case class Connection(@BeanProperty var id: String,
+                      @BeanProperty var source: ConnectionPort,
+                      @BeanProperty var destination: ConnectionPort) {
+  def this() = this("", ConnectionPort("", ""), ConnectionPort("", ""))
 }
 
 case class FlowInstance(@BeanProperty var id: String,
