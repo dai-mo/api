@@ -20,10 +20,11 @@ case class Connection(@BeanProperty var id: String,
 }
 
 case class FlowInstance(@BeanProperty var id: String,
+                        @BeanProperty var name: String,
                         @BeanProperty var version: String,
                         @BeanProperty var processors : List[ProcessorInstance],
                         @BeanProperty var connections: List[Connection]) {
-  def this() = this("", "", Nil, Nil)
+  def this() = this("", "", "", Nil, Nil)
 }
 
 case class FlowTemplate(@BeanProperty var id: String,
@@ -47,9 +48,10 @@ case class ProcessorType(@BeanProperty var pType:String,
 
 trait FlowApiService {
   def templates(clientId: String):List[FlowTemplate]
-  def instantiate(flowTemplateId:String, clientId: String):FlowInstance
-  def instance(flowInstanceId: String, clientId: String): FlowInstance
-  def remove(flowInstanceId: String, clientId: String): Boolean
+  def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
+  def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
+  def instances(userId: String, authToken: String): List[FlowInstance]
+  def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
 }
 
 trait ProcessorApiService {
