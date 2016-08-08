@@ -51,6 +51,8 @@ trait FlowApiService {
   def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
   def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
   def instances(userId: String, authToken: String): List[FlowInstance]
+  def start(flowInstanceId: String, userId: String, authToken: String): List[ProcessorInstance]
+  def stop(flowInstanceId: String, userId: String, authToken: String): List[ProcessorInstance]
   def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
 }
 
@@ -59,6 +61,7 @@ trait ProcessorApiService {
   def typesSearchTags(str:String, clientToken: String): List[ProcessorType]
   def create(name: String, ptype: String, clientToken: String): ProcessorInstance
   def start(processorId: String, clientToken: String): ProcessorInstance
+  def stop(processorId: String, processGroupId: String): ProcessorInstance
   def remove(processorId: String, clientToken: String): Boolean
 }
 
