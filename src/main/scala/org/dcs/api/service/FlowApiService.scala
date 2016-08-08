@@ -21,10 +21,11 @@ case class Connection(@BeanProperty var id: String,
 
 case class FlowInstance(@BeanProperty var id: String,
                         @BeanProperty var name: String,
+                        @BeanProperty var nameId: String,
                         @BeanProperty var version: String,
                         @BeanProperty var processors : List[ProcessorInstance],
                         @BeanProperty var connections: List[Connection]) {
-  def this() = this("", "", "", Nil, Nil)
+  def this() = this("", "", "", "", Nil, Nil)
 }
 
 case class FlowTemplate(@BeanProperty var id: String,
