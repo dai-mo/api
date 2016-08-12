@@ -53,8 +53,8 @@ trait FlowApiService {
   def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
   def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
   def instances(userId: String, authToken: String): List[FlowInstance]
-  def start(flowInstanceId: String, userId: String, authToken: String): List[ProcessorInstance]
-  def stop(flowInstanceId: String, userId: String, authToken: String): List[ProcessorInstance]
+  def start(flowInstanceId: String, userId: String, authToken: String): Boolean
+  def stop(flowInstanceId: String, userId: String, authToken: String): Boolean
   def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
 }
 
