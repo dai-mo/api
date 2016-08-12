@@ -22,10 +22,10 @@ case class Connection(@BeanProperty var id: String,
 case class FlowInstance(@BeanProperty var id: String,
                         @BeanProperty var name: String,
                         @BeanProperty var nameId: String,
-                        @BeanProperty var version: String,
+                        @BeanProperty var version: Long,
                         @BeanProperty var processors : List[ProcessorInstance],
                         @BeanProperty var connections: List[Connection]) {
-  def this() = this("", "", "", "", Nil, Nil)
+  def this() = this("", "", "", 0.0.toLong, Nil, Nil)
 }
 
 case class FlowTemplate(@BeanProperty var id: String,
@@ -37,8 +37,9 @@ case class FlowTemplate(@BeanProperty var id: String,
 }
 
 case class ProcessorInstance(@BeanProperty var id: String,
-                             @BeanProperty var status: String) {
-  def this() = this("", "")
+                             @BeanProperty var status: String,
+                             @BeanProperty var version: Long) {
+  def this() = this("", "", 0.0.toLong)
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -52,17 +53,18 @@ trait FlowApiService {
   def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
   def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
   def instances(userId: String, authToken: String): List[FlowInstance]
-  def start(flowInstanceId: String, userId: String, authToken: String): List[ProcessorInstance]
-  def stop(flowInstanceId: String, userId: String, authToken: String): List[ProcessorInstance]
+  def start(flowInstanceId: String, userId: String, authToken: String): Boolean
+  def stop(flowInstanceId: String, userId: String, authToken: String): Boolean
   def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
 }
 
 trait ProcessorApiService {
-  def types(clientToken: String): List[ProcessorType]
-  def typesSearchTags(str:String, clientToken: String): List[ProcessorType]
+  def types(userId: String): List[ProcessorType]
+  def typesSearchTags(str:String, userId: String): List[ProcessorType]
   def create(name: String, ptype: String, clientToken: String): ProcessorInstance
-  def start(processorId: String, clientToken: String): ProcessorInstance
-  def stop(processorId: String, processGroupId: String): ProcessorInstance
-  def remove(processorId: String, clientToken: String): Boolean
+  def instance(processorId: String, userId: String): ProcessorInstance
+  def start(processorId: String, userId: String): ProcessorInstance
+  def stop(processorId: String, userId: String): ProcessorInstance
+  def remove(processorId: String, userId: String): Boolean
 }
 
