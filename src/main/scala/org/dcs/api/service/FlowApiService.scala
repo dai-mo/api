@@ -8,6 +8,8 @@ import scala.beans.BeanProperty
   * Created by cmathew on 05/06/16.
   */
 
+// --- Flow Models/ API Start ---
+
 case class ConnectionPort(@BeanProperty var id: String,
                           @BeanProperty var `type`: String) {
   def this() = this("", "")
@@ -36,6 +38,23 @@ case class FlowTemplate(@BeanProperty var id: String,
   def this() = this("", "", "", "", null)
 }
 
+
+
+trait FlowApiService {
+  def templates(clientId: String):List[FlowTemplate]
+  def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
+  def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
+  def instances(userId: String, authToken: String): List[FlowInstance]
+  def start(flowInstanceId: String, userId: String, authToken: String): Boolean
+  def stop(flowInstanceId: String, userId: String, authToken: String): Boolean
+  def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
+}
+
+// --- Flow Models/ API End ---
+
+
+// --- Processor Models/ API Start ---
+
 case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var status: String,
                              @BeanProperty var version: Long) {
@@ -48,16 +67,6 @@ case class ProcessorType(@BeanProperty var pType:String,
   def this() = this("", "", Nil)
 }
 
-trait FlowApiService {
-  def templates(clientId: String):List[FlowTemplate]
-  def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
-  def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
-  def instances(userId: String, authToken: String): List[FlowInstance]
-  def start(flowInstanceId: String, userId: String, authToken: String): Boolean
-  def stop(flowInstanceId: String, userId: String, authToken: String): Boolean
-  def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
-}
-
 trait ProcessorApiService {
   def types(userId: String): List[ProcessorType]
   def typesSearchTags(str:String, userId: String): List[ProcessorType]
@@ -68,3 +77,19 @@ trait ProcessorApiService {
   def remove(processorId: String, userId: String): Boolean
 }
 
+// --- Processor Models/ API End ---
+
+
+// --- Provenance Models/ API Start ---
+
+case class Provenance(@BeanProperty var id: String,
+                      @BeanProperty var queryId: String,
+                      @BeanProperty var content: String) {
+  def this() = this("", "", "")
+}
+
+trait ProvenanceApiService {
+  def provenance(processorId: String, maxResults: Int, startDate: Date, endDate: Date): List[Provenance]
+}
+
+// --- Provenance Models/ API End ---
