@@ -84,8 +84,9 @@ trait ProcessorApiService {
 
 case class Provenance(@BeanProperty var id: String,
                       @BeanProperty var queryId: String,
+                      @BeanProperty var clusterNodeId: String,
                       @BeanProperty var content: String) {
-  def this() = this("", "", "")
+  def this() = this("", "", "", "")
 }
 
 trait ProvenanceApiService {
