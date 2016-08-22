@@ -24,10 +24,11 @@ case class Connection(@BeanProperty var id: String,
 case class FlowInstance(@BeanProperty var id: String,
                         @BeanProperty var name: String,
                         @BeanProperty var nameId: String,
+                        @BeanProperty var state: String,
                         @BeanProperty var version: Long,
                         @BeanProperty var processors : List[ProcessorInstance],
                         @BeanProperty var connections: List[Connection]) {
-  def this() = this("", "", "", 0.0.toLong, Nil, Nil)
+  def this() = this("", "", "", "", 0.0.toLong, Nil, Nil)
 }
 
 case class FlowTemplate(@BeanProperty var id: String,
@@ -84,8 +85,9 @@ trait ProcessorApiService {
 
 case class Provenance(@BeanProperty var id: String,
                       @BeanProperty var queryId: String,
+                      @BeanProperty var clusterNodeId: String,
                       @BeanProperty var content: String) {
-  def this() = this("", "", "")
+  def this() = this("", "", "", "")
 }
 
 trait ProvenanceApiService {
