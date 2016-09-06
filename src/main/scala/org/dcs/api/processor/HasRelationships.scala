@@ -9,12 +9,12 @@ import scala.beans.BeanProperty
   */
 trait HasRelationships {
 
-  def relationships(): JavaSet[RelationshipSettings]
+  def relationships(): JavaSet[RemoteRelationship]
 
 }
 
-case class RelationshipSettings(@BeanProperty var name: String,
-                                @BeanProperty var description: String) {
+case class RemoteRelationship(@BeanProperty var name: String,
+                              @BeanProperty var description: String) {
   def this() = this("", "")
 }
 
