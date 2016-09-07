@@ -13,7 +13,7 @@ trait HasRelationships {
 
 }
 
-case class RemoteRelationship(@BeanProperty var name: String,
+case class RemoteRelationship(@BeanProperty var id: String,
                               @BeanProperty var description: String) {
   def this() = this("", "")
 }
