@@ -12,61 +12,61 @@ trait StatefulRemoteProcessorService extends RemoteProcessorService  {
 
   def init(): String
 
-  def onConfigurationRestore(processorStateId: String): Boolean  = get(processorStateId) match {
+  def onInstanceConfigurationRestore(processorStateId: String): Boolean  = get(processorStateId) match {
     case None => false
     case Some(p) => p.onConfigurationRestore(); true
   }
 
-  def onPropertyChanged(processorStateId: String,
+  def onInstancePropertyChanged(processorStateId: String,
                         property: RemoteProperty): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => p.onPropertyChanged(property); true
   }
 
-  def onAdd(processorStateId: String): Unit = get(processorStateId) match {
-    case None => Unit
-    case Some(p) =>  p.onAdd()
+  def onInstanceAdd(processorStateId: String): Boolean = get(processorStateId) match {
+    case None => false
+    case Some(p) =>  p.onAdd(); true
   }
 
-  def onSchedule(processorStateId: String,
+  def onInstanceSchedule(processorStateId: String,
                  properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => p.onSchedule(properties); true
   }
 
-  def execute(processorStateId: String,
+  def instanceExecute(processorStateId: String,
               input: Array[Byte],
               properties: JavaMap[String, String]): AnyRef = get(processorStateId) match {
     case None => null
     case Some(p) => p.execute(input, properties)
   }
 
-  def trigger(processorStateId: String,
+  def instanceTrigger(processorStateId: String,
               input: Array[Byte],
               properties: JavaMap[String, String]): Array[Byte] = get(processorStateId) match {
     case None => null
     case Some(p) => p.trigger(input, properties)
   }
 
-  def onUnschedule(processorStateId: String,
+  def onInstanceUnschedule(processorStateId: String,
                    properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => p.onUnschedule(properties); true
   }
 
-  def onStop(processorStateId: String,
+  def onInstanceStop(processorStateId: String,
              properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => p.onStop(properties); true
   }
 
-  def onShutdown(processorStateId: String,
+  def onInstanceShutdown(processorStateId: String,
                  properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => p.onShutdown(properties); true
   }
 
-  def onRemove(processorStateId: String,
+  def onInstanceRemove(processorStateId: String,
                properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => {
