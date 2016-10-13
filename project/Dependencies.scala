@@ -4,7 +4,7 @@ object Dependencies {
   lazy val scVersion          = "2.11.7"
 
   // Versions
-  lazy val dcsCommonsVersion  = "0.1.0"
+  lazy val dcsCommonsVersion  = "0.2.0-SNAPSHOT"
   lazy val dcsTestVersion     = "0.1.0"
 
   val dcsCommons      = "org.dcs"               % "org.dcs.commons"            % dcsCommonsVersion
@@ -13,7 +13,7 @@ object Dependencies {
 
   // Collect Api Dependencies
   val apiDependencies = Seq(
-    dcsCommons,
+    dcsCommons      % "provided",
     dcsTest         % "test"
   )
 }
