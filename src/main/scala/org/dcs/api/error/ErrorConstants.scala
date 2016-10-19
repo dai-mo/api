@@ -53,7 +53,15 @@ object ErrorConstants {
   /*
     Web client errors
    */
-  val DCS400 = ErrorResponse("DCS401", "Request is malformed", 400)
+  val DCS400 = ErrorResponse("DCS400", "Request is malformed", 400)
+
+  /*
+  Security errors
+ */
+  val DCS500 = ErrorResponse("DCS500", "Unkown authorisation error", 500)
+  val DCS501 = ErrorResponse("DCS501", "Access token is missing", 401)
+  val DCS502 = ErrorResponse("DCS502", "Access token is invalid", 401)
+  val DCS503 = ErrorResponse("DCS503", "Requested action is no authorised", 401)
 
 }
 
