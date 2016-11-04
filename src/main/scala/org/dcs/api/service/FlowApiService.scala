@@ -3,6 +3,7 @@ package org.dcs.api.service
 import java.util.Date
 
 import scala.beans.BeanProperty
+import scala.concurrent.Future
 
 /**
   * Created by cmathew on 05/06/16.
@@ -42,13 +43,13 @@ case class FlowTemplate(@BeanProperty var id: String,
 
 
 trait FlowApiService {
-  def templates(clientId: String):List[FlowTemplate]
-  def instantiate(flowTemplateId: String, userId: String, authToken: String):FlowInstance
-  def instance(flowInstanceId: String, userId: String, authToken: String): FlowInstance
-  def instances(userId: String, authToken: String): List[FlowInstance]
-  def start(flowInstanceId: String, userId: String, authToken: String): Boolean
-  def stop(flowInstanceId: String, userId: String, authToken: String): Boolean
-  def remove(flowInstanceId: String, userId: String, authToken: String): Boolean
+  def templates(clientId: String): Future[List[FlowTemplate]]
+  def instantiate(flowTemplateId: String, userId: String, authToken: String): Future[FlowInstance]
+  def instance(flowInstanceId: String, userId: String, authToken: String): Future[FlowInstance]
+  def instances(userId: String, authToken: String): Future[List[FlowInstance]]
+  def start(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
+  def stop(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
+  def remove(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
 }
 
 // --- Flow Models/ API End ---
@@ -69,13 +70,13 @@ case class ProcessorType(@BeanProperty var pType:String,
 }
 
 trait ProcessorApiService {
-  def types(userId: String): List[ProcessorType]
-  def typesSearchTags(str:String, userId: String): List[ProcessorType]
-  def create(name: String, ptype: String, clientToken: String): ProcessorInstance
-  def instance(processorId: String, userId: String): ProcessorInstance
-  def start(processorId: String, userId: String): ProcessorInstance
-  def stop(processorId: String, userId: String): ProcessorInstance
-  def remove(processorId: String, userId: String): Boolean
+  def types(userId: String): Future[List[ProcessorType]]
+  def typesSearchTags(str:String, userId: String): Future[List[ProcessorType]]
+  def create(name: String, ptype: String, clientToken: String): Future[ProcessorInstance]
+  def instance(processorId: String, userId: String): Future[ProcessorInstance]
+  def start(processorId: String, userId: String): Future[ProcessorInstance]
+  def stop(processorId: String, userId: String): Future[ProcessorInstance]
+  def remove(processorId: String, userId: String): Future[Boolean]
 }
 
 // --- Processor Models/ API End ---
@@ -91,7 +92,7 @@ case class Provenance(@BeanProperty var id: String,
 }
 
 trait ProvenanceApiService {
-  def provenance(processorId: String, maxResults: Int, startDate: Date, endDate: Date): List[Provenance]
+  def provenance(processorId: String, maxResults: Int, startDate: Date, endDate: Date): Future[List[Provenance]]
 }
 
 // --- Provenance Models/ API End ---
