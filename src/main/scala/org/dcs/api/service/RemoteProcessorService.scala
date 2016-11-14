@@ -1,8 +1,10 @@
 package org.dcs.api.service
 
-import java.util.{Set => JavaSet, List => JavaList, Map => JavaMap}
+import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
+import org.apache.avro.Schema
 import org.dcs.api.processor._
+import org.dcs.commons.error.ErrorResponse
 
 /**
   * Created by cmathew on 06/09/16.
@@ -13,11 +15,11 @@ trait RemoteProcessorService extends RemoteProcessor
   with StatelessProcessor {
 
 
-  override def execute(input: Array[Byte], properties: JavaMap[String, String]): AnyRef = {
+  override def execute(input: Array[Byte], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] = {
     instance().execute(input, properties)
   }
 
-  override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Byte] = {
+  override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
     instance().trigger(input, properties)
   }
 
@@ -37,6 +39,9 @@ trait RemoteProcessorService extends RemoteProcessor
 
   override def metadata():MetaData =
     getDef(instance()).metadata()
+
+  override def schema(): Option[Schema] =
+    instance().schema()
 }
 
 
