@@ -19,7 +19,7 @@ trait RemoteProcessorService extends RemoteProcessor
     instance().execute(input, properties)
   }
 
-  override def trigger(input: Array[Byte], properties: JavaMap[String, String]): JavaList[Either[Array[Byte], Array[Byte]]] = {
+  override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
     instance().trigger(input, properties)
   }
 

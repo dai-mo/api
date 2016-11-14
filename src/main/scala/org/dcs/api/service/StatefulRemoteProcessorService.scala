@@ -46,7 +46,7 @@ trait StatefulRemoteProcessorService extends RemoteProcessorService  {
   def instanceTrigger(processorStateId: String,
                       input: Array[Byte],
 
-                      properties: JavaMap[String, String]): JavaList[Either[Array[Byte], Array[Byte]]] =
+                      properties: JavaMap[String, String]): Array[Array[Byte]] =
     get(processorStateId) match {
       case None => null
       case Some(p) => p.trigger(input, properties)
