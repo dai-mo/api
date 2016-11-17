@@ -58,9 +58,10 @@ trait FlowApiService {
 // --- Processor Models/ API Start ---
 
 case class ProcessorInstance(@BeanProperty var id: String,
+                             @BeanProperty var `type`: String,
                              @BeanProperty var status: String,
                              @BeanProperty var version: Long) {
-  def this() = this("", "", 0.0.toLong)
+  def this() = this("", "", "", 0.0.toLong)
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -92,7 +93,7 @@ case class Provenance(@BeanProperty var id: String,
 }
 
 trait ProvenanceApiService {
-  def provenance(processorId: String, maxResults: Int, startDate: Date, endDate: Date): Future[List[Provenance]]
+  def provenance(processorId: String, processorType: String, maxResults: Int, startDate: Date, endDate: Date): Future[List[Provenance]]
 }
 
 // --- Provenance Models/ API End ---
