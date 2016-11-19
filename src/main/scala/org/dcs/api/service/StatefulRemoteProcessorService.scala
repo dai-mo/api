@@ -2,6 +2,7 @@ package org.dcs.api.service
 
 import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
+import org.apache.avro.generic.GenericRecord
 import org.dcs.api.processor._
 import org.dcs.commons.error.ErrorResponse
 
@@ -36,16 +37,15 @@ trait StatefulRemoteProcessorService extends RemoteProcessorService  {
   }
 
   def instanceExecute(processorStateId: String,
-                      input: Array[Byte],
+                      record: Option[GenericRecord],
                       properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] =
     get(processorStateId) match {
       case None => null
-      case Some(p) => p.execute(input, properties)
+      case Some(p) => p.execute(record, properties)
     }
 
   def instanceTrigger(processorStateId: String,
                       input: Array[Byte],
-
                       properties: JavaMap[String, String]): Array[Array[Byte]] =
     get(processorStateId) match {
       case None => null
