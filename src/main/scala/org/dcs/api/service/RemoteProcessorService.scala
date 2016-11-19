@@ -3,6 +3,7 @@ package org.dcs.api.service
 import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
 import org.apache.avro.Schema
+import org.apache.avro.generic.GenericRecord
 import org.dcs.api.processor._
 import org.dcs.commons.error.ErrorResponse
 
@@ -15,8 +16,8 @@ trait RemoteProcessorService extends RemoteProcessor
   with StatelessProcessor {
 
 
-  override def execute(input: Array[Byte], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] = {
-    instance().execute(input, properties)
+  override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+    instance().execute(record, properties)
   }
 
   override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
@@ -40,8 +41,8 @@ trait RemoteProcessorService extends RemoteProcessor
   override def metadata():MetaData =
     getDef(instance()).metadata()
 
-  override def schemaId(): Option[String] =
-    instance().schemaId()
+  override def schemaId: String =
+    instance().schemaId
 }
 
 

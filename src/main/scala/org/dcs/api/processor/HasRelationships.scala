@@ -21,6 +21,11 @@ case class RemoteRelationship(@BeanProperty var id: String,
 object RelationshipType {
   val SucessRelationship = "success"
   val FailureRelationship = "failure"
+
+  val success = RemoteRelationship(RelationshipType.SucessRelationship,
+    "All status updates will be routed to this relationship")
+  val failure = RemoteRelationship(RelationshipType.FailureRelationship,
+    "All failed updates will be routed to this relationship")
 }
 
 
