@@ -24,7 +24,7 @@ trait HasProperties {
 case class RemoteProperty(@BeanProperty var displayName: String,
                           @BeanProperty var name: String,
                           @BeanProperty var description: String,
-                          @BeanProperty var defaultValue: String,
+                          @BeanProperty var defaultValue: String = null,
                           @BeanProperty var possibleValues: JavaSet[PossibleValue] = Set[PossibleValue]().asJava,
                           @BeanProperty var required: Boolean = false,
                           @BeanProperty var sensitive: Boolean = false,
