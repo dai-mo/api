@@ -19,6 +19,10 @@ trait HasProperties {
       values.asScala.toMap.getOrElse(propertySettings.name, propertySettings.defaultValue)
   }
 
+  def processorType(): String
+
+
+
 }
 
 case class RemoteProperty(@BeanProperty var displayName: String,
@@ -46,5 +50,6 @@ object PropertyType {
   val Boolean = "BOOLEAN"
   val List = "LIST"
 }
+
 
 

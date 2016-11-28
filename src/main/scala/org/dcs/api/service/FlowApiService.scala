@@ -59,9 +59,10 @@ trait FlowApiService {
 
 case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var `type`: String,
+                             @BeanProperty var processorType: String,
                              @BeanProperty var status: String,
                              @BeanProperty var version: Long) {
-  def this() = this("", "", "", 0.0.toLong)
+  def this() = this("", "", "", "", 0.0.toLong)
 }
 
 case class ProcessorType(@BeanProperty var pType:String,

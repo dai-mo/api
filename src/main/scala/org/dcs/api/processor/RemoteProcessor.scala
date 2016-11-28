@@ -11,6 +11,13 @@ import scala.util.control.NonFatal
 
 object RemoteProcessor {
   val SchemaIdKey = "SCHEMA_ID"
+
+  val ProcessorTypeKey = "processor-type"
+
+  val DataIngestionProcessorType = "data-ingestion"
+  val WorkerProcessorType = "worker"
+  val SinkProcessorType = "sink"
+  val BatchProcessorType = "batch"
 }
 
 trait RemoteProcessor extends BaseProcessor
