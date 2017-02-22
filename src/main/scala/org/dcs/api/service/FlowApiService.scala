@@ -1,5 +1,6 @@
 package org.dcs.api.service
 
+import java.util
 import java.util.Date
 
 import scala.beans.BeanProperty
@@ -86,11 +87,15 @@ trait ProcessorApiService {
 
 // --- Provenance Models/ API Start ---
 
+
 case class Provenance(@BeanProperty var id: String,
                       @BeanProperty var queryId: String,
                       @BeanProperty var clusterNodeId: String,
-                      @BeanProperty var content: String) {
-  def this() = this("", "", "", "")
+                      @BeanProperty var raw: Array[Byte],
+                      @BeanProperty var content: String,
+                      @BeanProperty var schemaId: String,
+                      @BeanProperty var timestamp: Date) {
+  def this() = this("", "", "", Array[Byte](), "", "", null)
 }
 
 trait ProvenanceApiService {
@@ -98,3 +103,11 @@ trait ProvenanceApiService {
 }
 
 // --- Provenance Models/ API End ---
+
+// --- Flow Data Models / API start ---
+
+trait IFlowDataService {
+  def provenanceByComponentId(cid: String, maxResults: Int): util.List[Provenance]
+}
+
+// --- Flow Data Models / API end ---
