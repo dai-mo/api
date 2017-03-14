@@ -10,7 +10,11 @@ import scala.collection.JavaConverters._
   */
 trait HasProperties {
 
-  def properties(): JavaList[RemoteProperty]
+
+  def properties(): JavaList[RemoteProperty] = _properties().asJava
+
+  protected def _properties(): List[RemoteProperty] = Nil
+
 
   def propertyValue(propertySettings: RemoteProperty, values: JavaMap[String, String]): String = {
     if(values == null)
@@ -18,9 +22,6 @@ trait HasProperties {
     else
       values.asScala.toMap.getOrElse(propertySettings.name, propertySettings.defaultValue)
   }
-
-  def processorType(): String
-
 
 
 }

@@ -1,13 +1,10 @@
 package org.dcs.api.service
 
-import java.util
 import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
 import org.apache.avro.generic.GenericRecord
 import org.dcs.api.processor._
 import org.dcs.commons.error.ErrorResponse
-
-import scala.collection.JavaConverters._
 
 /**
   * Created by cmathew on 06/09/16.
@@ -17,29 +14,12 @@ trait RemoteProcessorService extends RemoteProcessor
   with DefinitionStore
   with StatelessProcessor {
 
-  import RemoteProcessor._
-
   override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] = {
     instance().execute(record, properties)
   }
 
   override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
     instance().trigger(input, properties)
-  }
-
-  override def properties(): JavaList[RemoteProperty] = {
-
-    val props = new util.ArrayList(getDef(instance()).properties())
-
-    // FIXME : Processor Type should be a first-class attribute of
-    //         a Processor and not a property
-    val typeProperty = RemoteProperty(displayName = ProcessorTypeKey,
-      name = ProcessorTypeKey,
-      description = ProcessorTypeKey,
-      defaultValue = instance().processorType())
-
-    props.add(typeProperty)
-    props
   }
 
 
@@ -49,8 +29,7 @@ trait RemoteProcessorService extends RemoteProcessor
 
   override def processorType(): String = instance().processorType()
 
-  override def relationships(): JavaSet[RemoteRelationship] =
-    getDef(instance()).relationships()
+  override def className: String = instance().className
 
   override  def configuration: Configuration =
     getDef(instance()).configuration
