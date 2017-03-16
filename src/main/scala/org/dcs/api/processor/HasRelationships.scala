@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
   */
 trait HasRelationships {
 
-  def relationships(): JavaSet[RemoteRelationship] = _relationships().asJava
+  def relationships(): JavaSet[RemoteRelationship] = (_relationships() + RelationshipType.FAILURE).asJava
 
   protected def _relationships(): Set[RemoteRelationship] = Set()
 
