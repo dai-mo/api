@@ -1,5 +1,6 @@
 package org.dcs.api.service
 
+import java.util
 import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
 import org.apache.avro.generic.GenericRecord
@@ -22,14 +23,17 @@ trait RemoteProcessorService extends RemoteProcessor
     instance().trigger(input, properties)
   }
 
+  override def className: String = instance().className
+
+  override def relationships(): util.Set[RemoteRelationship] = getDef(instance()).relationships()
+
+  override def properties(): util.List[RemoteProperty] = getDef(instance()).properties()
 
   override def propertyValue(propertySettings: RemoteProperty,
                              values: JavaMap[String, String]): String =
     getDef(instance()).propertyValue(propertySettings, values)
 
   override def processorType(): String = instance().processorType()
-
-  override def className: String = instance().className
 
   override  def configuration: Configuration =
     getDef(instance()).configuration

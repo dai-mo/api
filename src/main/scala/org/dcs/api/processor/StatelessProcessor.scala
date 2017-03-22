@@ -8,7 +8,7 @@ trait StatelessProcessor {
   var remoteProcessor: Option[RemoteProcessor] = None
 
   def instance(): RemoteProcessor = {
-    if(remoteProcessor == None)
+    if(remoteProcessor.isEmpty)
       remoteProcessor = Some(initialise())
 
     remoteProcessor.get

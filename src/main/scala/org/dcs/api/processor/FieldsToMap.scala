@@ -2,9 +2,10 @@ package org.dcs.api.processor
 
 import java.nio.ByteBuffer
 import java.util
-import java.util.{Map => JavaMap, List => JavaList}
+import java.util.{List => JavaList, Map => JavaMap}
 
 import org.apache.avro.generic.{GenericFixed, GenericRecord}
+import org.dcs.commons.error.ErrorResponse
 
 import scala.collection.JavaConverters._
 
@@ -30,75 +31,89 @@ trait FieldsToMap extends RemoteProcessor {
     props
   }
 
+
+  override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
+    implicit val props = properties
+    super.trigger(input, properties)
+  }
+
   implicit class GenericRecordTypes(record: Option[GenericRecord]) {
-    def getAsDouble(key: String, properties: JavaMap[String, String] = null): Option[Double] =
+    def getAsDouble(key: String)(implicit properties: JavaMap[String, String] = null): Option[Double] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[Double])
+        record.getAsDouble(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[Double])
 
-    def getAsBoolean(key: String, properties: JavaMap[String, String] = null): Option[Boolean] =
+    def getAsBoolean(key: String)(implicit properties: JavaMap[String, String] = null): Option[Boolean] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[Boolean])
+        record.getAsBoolean(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[Boolean])
 
-    def getAsInt(key: String, properties: JavaMap[String, String] = null): Option[Int] =
+    def getAsInt(key: String)(implicit properties: JavaMap[String, String] = null): Option[Int] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[Int])
+        record.getAsInt(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[Int])
 
-    def getAsLong(key: String, properties: JavaMap[String, String] = null): Option[Long] =
+    def getAsLong(key: String)(implicit properties: JavaMap[String, String] = null): Option[Long] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[Int])
+        record.getAsLong(key)
       else
-        mapsTo(record, key, properties).map(_.asInstanceOf[Int])
-    def getAsFloat(key: String, properties: JavaMap[String, String] = null): Option[Float] =
-      if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[Int])
-      else
-        mapsTo(record, key, properties).map(_.asInstanceOf[Int])
+        mapsTo(record, key, properties).map(_.asInstanceOf[Long])
 
-    def getAsByteBuffer(key: String, properties: JavaMap[String, String] = null): Option[ByteBuffer] =
+    def getAsFloat(key: String)(implicit properties: JavaMap[String, String] = null): Option[Float] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[ByteBuffer])
+        record.getAsFloat(key)
+      else
+        mapsTo(record, key, properties).map(_.asInstanceOf[Float])
+
+    def getAsString(key: String)(implicit properties: JavaMap[String, String] = null): Option[String] =
+      if(properties == null)
+        record.getAsString(key)
+      else
+        mapsTo(record, key, properties).map(_.asInstanceOf[String])
+
+    def getAsByteBuffer(key: String)(implicit properties: JavaMap[String, String] = null): Option[ByteBuffer] =
+      if(properties == null)
+        record.getAsByteBuffer(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[ByteBuffer])
 
-    def getAsCharSequence(key: String, properties: JavaMap[String, String] = null): Option[CharSequence] =
+    def getAsCharSequence(key: String)(implicit properties: JavaMap[String, String] = null): Option[CharSequence] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[CharSequence])
+        record.getAsCharSequence(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[CharSequence])
 
-    def getAsGenericRecord(key: String, properties: JavaMap[String, String] = null): Option[GenericRecord] =
+    def getAsGenericRecord(key: String)(implicit properties: JavaMap[String, String] = null): Option[GenericRecord] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[GenericRecord])
+        record.getAsGenericRecord(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[GenericRecord])
 
-    def getAsList[T](key: String, properties: JavaMap[String, String] = null): Option[List[T]] =
+    def getAsList[T](key: String)(implicit properties: JavaMap[String, String] = null): Option[List[T]] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[List[T]])
+        record.getAsList[T](key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[List[T]])
-    def getAsMap[K, V](key: String, properties: JavaMap[String, String] = null): Option[Map[K, V]] =
+
+    def getAsMap[K, V](key: String)(implicit properties: JavaMap[String, String] = null): Option[Map[K, V]] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[Map[K, V]])
+        record.getAsMap[K, V](key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[Map[K, V]])
 
-    def getAsGenericFixed(key: String, properties: JavaMap[String, String] = null): Option[GenericFixed] =
+    def getAsGenericFixed(key: String)(implicit properties: JavaMap[String, String] = null): Option[GenericFixed] =
       if(properties == null)
-        record.map(_.get(key)).map(_.asInstanceOf[GenericFixed])
+        record.getAsGenericFixed(key)
       else
         mapsTo(record, key, properties).map(_.asInstanceOf[GenericFixed])
 
     private def mapsTo(record: Option[GenericRecord], key: String, properties: JavaMap[String, String]): Option[Object] = {
       def get(path: List[String], currentRecord: Option[GenericRecord]): Option[Object] = path match {
-        case Nil => None
-        case last :: Nil => currentRecord.map(_.get(last))
+        case Nil => currentRecord
+        case last :: Nil => currentRecord.flatMap(r => Option(r.get(last)))
         case "$" :: tail => get(path.tail, record)
         case head :: tail => get(path.tail, getAsGenericRecord(head))
       }

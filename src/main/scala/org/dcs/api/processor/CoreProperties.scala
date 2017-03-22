@@ -15,6 +15,10 @@ object CoreProperties {
   val FieldToMapKey = "_FIELD_TO_MAP"
   val SchemaNamespace = "org.dcs.processor"
 
+  def remoteProperty(key: String, defaultValue: String = null): RemoteProperty = {
+    RemoteProperty(key, key, "", defaultValue, required = true)
+  }
+
   def apply(properties: Map[String, String]): CoreProperties =
     new CoreProperties(properties)
 }
@@ -24,12 +28,12 @@ class CoreProperties(properties: Map[String, String]) {
 
   private val parser = new Parser
 
-  val readSchemaId: Option[String] = properties.get(ReadSchemaIdKey)
-  val writeSchemaId: Option[String] = properties.get(WriteSchemaIdKey)
+  val readSchemaId: Option[String] = properties.get(ReadSchemaIdKey).flatMap(schemaId => Option(if(schemaId.isEmpty) null else schemaId))
+  val writeSchemaId: Option[String] = properties.get(WriteSchemaIdKey).flatMap(schemaId => Option(if(schemaId.isEmpty) null else schemaId))
 
   // FIXME: The actual schemas should not be required and should be removed
   //        once the transient schemaId -> schema store is setup
-  val readSchema: Option[Schema] = properties.get(ReadSchemaKey).map(parser.parse)
-  val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).map(parser.parse)
+  val readSchema: Option[Schema] = properties.get(ReadSchemaKey).map(schema => if(schema.isEmpty) null else parser.parse(schema))
+  val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).map(schema => if(schema.isEmpty) null else parser.parse(schema))
 
 }

@@ -16,6 +16,7 @@ trait HasRelationships {
 
 }
 
+
 case class RemoteRelationship(@BeanProperty var id: String,
                               @BeanProperty var description: String) {
   def this() = this("", "")
@@ -24,11 +25,14 @@ case class RemoteRelationship(@BeanProperty var id: String,
 object RelationshipType {
   val SucessRelationship = "success"
   val FailureRelationship = "failure"
+  val UnknownRelationship = "unknown"
 
   val SUCCESS = RemoteRelationship(RelationshipType.SucessRelationship,
     "All status updates will be routed to this relationship")
   val FAILURE = RemoteRelationship(RelationshipType.FailureRelationship,
     "All failed updates will be routed to this relationship")
+  val UNKNOWN = RemoteRelationship(RelationshipType.UnknownRelationship,
+    "Represents an nknown Relationship")
 }
 
 

@@ -1,7 +1,7 @@
 package org.dcs.api.processor
 
+import java.lang.NullPointerException
 import java.nio.ByteBuffer
-import java.util
 import java.util.{Map => JavaMap}
 
 import com.google.common.net.MediaType
@@ -24,24 +24,32 @@ object RemoteProcessor {
   val SinkProcessorType = "sink"
   val BatchProcessorType = "batch"
 
+
   def resolveReadSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = {
-    var schema = coreProperties.readSchema
-    var sid: Option[String] = None
-    if(schema.isEmpty) {
-      sid = coreProperties.readSchemaId
-      if(sid.isDefined) schema = AvroSchemaStore.get(sid.get)
-    }
-    (sid, schema)
+      var schema = coreProperties.readSchema
+      var sid: Option[String] = None
+      if (schema.isEmpty) {
+        sid = coreProperties.readSchemaId
+        schema = sid.flatMap(AvroSchemaStore.get)
+      }
+      (sid, schema)
   }
 
-  def resolveWriteSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = {
-    var schema = coreProperties.writeSchema
-    var sid: Option[String] = None
-    if(schema.isEmpty) {
-      sid = coreProperties.writeSchemaId
-      if(sid.isDefined) schema = AvroSchemaStore.get(sid.get)
-    }
-    (sid, schema)
+  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): (Option[String], Option[Schema]) = {
+      var schema = coreProperties.writeSchema
+      var sid: Option[String] = None
+      if(schema.isEmpty) {
+        sid = coreProperties.writeSchemaId
+        schema =  sid.flatMap(AvroSchemaStore.get)
+      }
+      if(sid.isEmpty && schema.isEmpty) {
+        sid = schemaId
+        schema = schemaId.flatMap(AvroSchemaStore.get)
+      }
+      if(sid.isEmpty && schema.isEmpty)
+        resolveReadSchema(coreProperties)
+      else
+        (sid, schema)
   }
 }
 
@@ -49,53 +57,52 @@ trait RemoteProcessor extends BaseProcessor
   with ProcessorDefinition {
   import RemoteProcessor._
 
-  private val parser = new Parser
-
   def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]]
 
   def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
     val coreProperties: CoreProperties = CoreProperties(properties.asScala.toMap)
 
+
     try {
+
       val (readSchemaId, readSchema) = resolveReadSchema(coreProperties)
-      if(readSchemaId.isEmpty && readSchema.isEmpty)
+      if(!input.isEmpty && readSchemaId.isEmpty && readSchema.isEmpty)
         throw new IllegalStateException("Read Schema for  " + className + " not available")
 
-      val (writeSchemaId, writeSchema) = resolveReadSchema(coreProperties)
-      if(readSchemaId.isEmpty && writeSchema.isEmpty)
+      val (writeSchemaId, writeSchema) = resolveWriteSchema(coreProperties)
+      if(writeSchemaId.isEmpty && writeSchema.isEmpty)
         throw new IllegalStateException("Write Schema for  " + className + " not available")
 
       val in = Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, readSchema))
 
       execute(in, properties).flatMap { out =>
         try {
-          if (out.isLeft)
-            Array(RelationshipType.FailureRelationship.getBytes,
-              AvroSchemaStore.ErrorResponseSchema.getBytes,
-              out.left.get.serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
-          else {
-            Array(RelationshipType.SucessRelationship.getBytes,
-              writeSchemaId.getOrElse("").getBytes,
-              out.right.get.serToBytes(writeSchema))
+          out match {
+            case Left(error) =>  Array(RelationshipType.FailureRelationship.getBytes,
+              error.serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+            case Right(record) => Array(RelationshipType.SucessRelationship.getBytes,
+              record.serToBytes(writeSchema))
           }
         } catch {
           case NonFatal(t) => Array(RelationshipType.FailureRelationship.getBytes,
-            AvroSchemaStore.ErrorResponseSchema.getBytes,
-            ErrorConstants.DCS306.withErrorMessage(t.getMessage).avroRecord().serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+            ErrorConstants.DCS306.withErrorMessage(Option(t.getMessage).getOrElse(t.getClass.getName)).
+              avroRecord().
+              serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
         }
       }.toArray
     } catch {
       case NonFatal(t) => Array(RelationshipType.FailureRelationship.getBytes,
-        AvroSchemaStore.ErrorResponseSchema.getBytes,
-        ErrorConstants.DCS306.withErrorMessage(t.getMessage).avroRecord().serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+        ErrorConstants.DCS306.withErrorMessage(Option(t.getMessage).getOrElse(t.getClass.getName)).
+          avroRecord().
+          serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
     }
   }
 
   def processorType(): String
 
-  def className: String
+  def className: String = this.getClass.getName
 
-  def schemaId: String = ""
+  def schemaId: String = null
 
   // The methods 'resolveReadSchema' and 'resolveWriteSchema' should ideally be implemented
   // in the RemoteProcessor sub traits (Ingestion, Worker, ...)
@@ -104,18 +111,53 @@ trait RemoteProcessor extends BaseProcessor
   // this method will also be unnecessarily exposed over soap. Hence the reason why this is a private method
   // in RemoteProcessor
   private def resolveReadSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = processorType() match {
-    case IngestionProcessorType => Ingestion.resolveReadSchema(coreProperties, Option(schemaId))
+    case IngestionProcessorType => (None, None)
     case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
     case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   }
 
-  private def resolveWriteSchema(coreProperties: CoreProperties, className: String): (Option[String], Option[Schema]) = processorType() match {
-    case IngestionProcessorType => Ingestion.resolveWriteSchema(coreProperties, Option(schemaId))
-    case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties)
+  private def resolveWriteSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = processorType() match {
+    case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
     case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   }
 
+  implicit class GenericRecordFields(record: Option[GenericRecord]) {
+    def getAsDouble(key: String): Option[Double] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Double])
 
+    def getAsBoolean(key: String): Option[Boolean] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Boolean])
+
+    def getAsInt(key: String): Option[Int] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Int])
+
+    def getAsLong(key: String): Option[Long] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Long])
+
+    def getAsFloat(key: String): Option[Float] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Float])
+
+    def getAsString(key: String): Option[String] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[String])
+
+    def getAsByteBuffer(key: String): Option[ByteBuffer] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[ByteBuffer])
+
+    def getAsCharSequence(key: String): Option[CharSequence] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[CharSequence])
+
+    def getAsGenericRecord(key: String): Option[GenericRecord] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[GenericRecord])
+
+    def getAsList[T](key: String): Option[List[T]] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[List[T]])
+
+    def getAsMap[K, V](key: String): Option[Map[K, V]] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Map[K, V]])
+
+    def getAsGenericFixed(key: String): Option[GenericFixed] =
+      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[GenericFixed])
+  }
 }
 
 trait ProcessorDefinition extends HasProperties
@@ -123,27 +165,11 @@ trait ProcessorDefinition extends HasProperties
   with HasConfiguration
   with HasMetaData
 
-object Ingestion {
 
-  def resolveReadSchema(coreProperties: CoreProperties, schemaId: Option[String]): (Option[String], Option[Schema]) = {
-    (schemaId, schemaId.flatMap(id => AvroSchemaStore.get(id)))
-  }
-
-  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): (Option[String], Option[Schema]) = {
-    val idOrSchema = RemoteProcessor.resolveWriteSchema(coreProperties)
-    var sid: Option[String] = idOrSchema._1
-    var schema:Option[Schema] = idOrSchema._2
-
-    if(idOrSchema._1.isEmpty && idOrSchema._2.isEmpty) {
-      sid = schemaId
-      schema = schemaId.flatMap(id => AvroSchemaStore.get(id))
-
-    }
-    (sid, schema)
-  }
-}
 
 trait Ingestion extends RemoteProcessor {
+  if(schemaId != null && !schemaId.isEmpty) AvroSchemaStore.add(schemaId)
+
   override def processorType(): String = RemoteProcessor.IngestionProcessorType
 
   override def configuration: Configuration = Configuration(inputMimeType = MediaType.OCTET_STREAM.toString,
@@ -156,6 +182,8 @@ trait Ingestion extends RemoteProcessor {
 }
 
 trait Worker extends RemoteProcessor {
+  if(schemaId != null && !schemaId.isEmpty) AvroSchemaStore.add(schemaId)
+
   override def processorType(): String = RemoteProcessor.WorkerProcessorType
 
   def configuration: Configuration = Configuration(inputMimeType = MediaType.OCTET_STREAM.toString,
@@ -166,6 +194,8 @@ trait Worker extends RemoteProcessor {
 }
 
 trait Sink extends RemoteProcessor {
+  if(schemaId != null && !schemaId.isEmpty) AvroSchemaStore.add(schemaId)
+
   override def processorType(): String = RemoteProcessor.SinkProcessorType
 
   override def configuration: Configuration = Configuration(inputMimeType = MediaType.OCTET_STREAM.toString,
