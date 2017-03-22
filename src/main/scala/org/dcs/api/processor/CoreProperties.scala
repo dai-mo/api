@@ -28,12 +28,12 @@ class CoreProperties(properties: Map[String, String]) {
 
   private val parser = new Parser
 
-  val readSchemaId: Option[String] = properties.get(ReadSchemaIdKey).flatMap(schemaId => Option(if(schemaId.isEmpty) null else schemaId))
-  val writeSchemaId: Option[String] = properties.get(WriteSchemaIdKey).flatMap(schemaId => Option(if(schemaId.isEmpty) null else schemaId))
+  val readSchemaId: Option[String] = properties.get(ReadSchemaIdKey).flatMap(schemaId => Option(if(schemaId == null || schemaId.isEmpty) null else schemaId))
+  val writeSchemaId: Option[String] = properties.get(WriteSchemaIdKey).flatMap(schemaId => Option(if(schemaId == null || schemaId.isEmpty) null else schemaId))
 
   // FIXME: The actual schemas should not be required and should be removed
   //        once the transient schemaId -> schema store is setup
-  val readSchema: Option[Schema] = properties.get(ReadSchemaKey).map(schema => if(schema.isEmpty) null else parser.parse(schema))
-  val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).map(schema => if(schema.isEmpty) null else parser.parse(schema))
+  val readSchema: Option[Schema] = properties.get(ReadSchemaKey).map(schema => if(schema == null || schema.isEmpty) null else parser.parse(schema))
+  val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).map(schema => if(schema == null || schema.isEmpty) null else parser.parse(schema))
 
 }
