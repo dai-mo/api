@@ -62,8 +62,9 @@ case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var `type`: String,
                              @BeanProperty var processorType: String,
                              @BeanProperty var status: String,
-                             @BeanProperty var version: Long) {
-  def this() = this("", "", "", "", 0.0.toLong)
+                             @BeanProperty var version: Long,
+                             @BeanProperty var properties: Map[String, String]) {
+  def this() = this("", "", "", "", 0.0.toLong, Map())
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -93,9 +94,9 @@ case class Provenance(@BeanProperty var id: String,
                       @BeanProperty var clusterNodeId: String,
                       @BeanProperty var raw: Array[Byte],
                       @BeanProperty var content: String,
-                      @BeanProperty var schemaId: String,
-                      @BeanProperty var timestamp: Date) {
-  def this() = this("", "", "", Array[Byte](), "", "", null)
+                      @BeanProperty var timestamp: Date,
+                      @BeanProperty var relationship: String) {
+  def this() = this("", "", "", Array[Byte](), "", null, "")
 }
 
 trait ProvenanceApiService {

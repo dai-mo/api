@@ -4,13 +4,20 @@ import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
+import CoreProperties._
 
 /**
   * Created by cmathew on 29/08/16.
   */
 trait HasProperties {
 
-  def properties(): JavaList[RemoteProperty]
+  def properties(): JavaList[RemoteProperty] = (
+    remoteProperty(ReadSchemaIdKey) :: remoteProperty(WriteSchemaIdKey, schemaId) ::
+      _properties()).asJava
+
+  protected def _properties(): List[RemoteProperty] =  Nil
+
+  def schemaId: String
 
   def propertyValue(propertySettings: RemoteProperty, values: JavaMap[String, String]): String = {
     if(values == null)
@@ -18,9 +25,6 @@ trait HasProperties {
     else
       values.asScala.toMap.getOrElse(propertySettings.name, propertySettings.defaultValue)
   }
-
-  def processorType(): String
-
 
 
 }

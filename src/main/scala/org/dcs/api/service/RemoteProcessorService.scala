@@ -7,8 +7,6 @@ import org.apache.avro.generic.GenericRecord
 import org.dcs.api.processor._
 import org.dcs.commons.error.ErrorResponse
 
-import scala.collection.JavaConverters._
-
 /**
   * Created by cmathew on 06/09/16.
   */
@@ -16,8 +14,6 @@ import scala.collection.JavaConverters._
 trait RemoteProcessorService extends RemoteProcessor
   with DefinitionStore
   with StatelessProcessor {
-
-  import RemoteProcessor._
 
   override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] = {
     instance().execute(record, properties)
@@ -27,30 +23,17 @@ trait RemoteProcessorService extends RemoteProcessor
     instance().trigger(input, properties)
   }
 
-  override def properties(): JavaList[RemoteProperty] = {
+  override def className: String = instance().className
 
-    val props = new util.ArrayList(getDef(instance()).properties())
+  override def relationships(): util.Set[RemoteRelationship] = getDef(instance()).relationships()
 
-    // FIXME : Processor Type should be a first-class attribute of
-    //         a Processor and not a property
-    val typeProperty = RemoteProperty(displayName = ProcessorTypeKey,
-      name = ProcessorTypeKey,
-      description = ProcessorTypeKey,
-      defaultValue = instance().processorType())
-
-    props.add(typeProperty)
-    props
-  }
-
+  override def properties(): util.List[RemoteProperty] = getDef(instance()).properties()
 
   override def propertyValue(propertySettings: RemoteProperty,
                              values: JavaMap[String, String]): String =
     getDef(instance()).propertyValue(propertySettings, values)
 
   override def processorType(): String = instance().processorType()
-
-  override def relationships(): JavaSet[RemoteRelationship] =
-    getDef(instance()).relationships()
 
   override  def configuration: Configuration =
     getDef(instance()).configuration
