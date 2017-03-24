@@ -73,7 +73,8 @@ trait RemoteProcessor extends BaseProcessor
       if(writeSchemaId.isEmpty && writeSchema.isEmpty)
         throw new IllegalStateException("Write Schema for  " + className + " not available")
 
-      val in = Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, readSchema))
+
+      val in = Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, writeSchema))
 
       execute(in, properties).flatMap { out =>
         try {
@@ -157,6 +158,43 @@ trait RemoteProcessor extends BaseProcessor
 
     def getAsGenericFixed(key: String): Option[GenericFixed] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[GenericFixed])
+
+    def getFromJsonPath(path: List[String]): Option[Object] = {
+      getFromJsonPath(path, record)
+    }
+
+    private def getFromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[Object] = path match {
+      case Nil => currentRecord
+      case last :: Nil => currentRecord.flatMap(r => Option(r.get(last)))
+      case "$" :: tail => getFromJsonPath(tail, currentRecord)
+      case head :: tail => getFromJsonPath(tail, currentRecord.getAsGenericRecord(head))
+    }
+  }
+
+  implicit class GenericRecordCasts(value: Option[Object]) {
+    def asDouble: Option[Double] = value.map(_.asInstanceOf[Double])
+
+    def asBoolean: Option[Boolean] = value.map(_.asInstanceOf[Boolean])
+
+    def asInt: Option[Int] = value.map(_.asInstanceOf[Int])
+
+    def asLong: Option[Long] = value.map(_.asInstanceOf[Long])
+
+    def asFloat: Option[Float] = value.map(_.asInstanceOf[Float])
+
+    def asString: Option[String] = value.map(_.asInstanceOf[String])
+
+    def asByteBuffer: Option[ByteBuffer] = value.map(_.asInstanceOf[ByteBuffer])
+
+    def asCharSequence: Option[CharSequence] = value.map(_.asInstanceOf[CharSequence])
+
+    def asGenericRecord: Option[GenericRecord] = value.map(_.asInstanceOf[GenericRecord])
+
+    def asList[T]: Option[List[T]] = value.map(_.asInstanceOf[List[T]])
+
+    def asMap[K, V]: Option[Map[K, V]] = value.map(_.asInstanceOf[Map[K, V]])
+
+    def asGenericFixed: Option[GenericFixed] = value.map(_.asInstanceOf[GenericFixed])
   }
 }
 

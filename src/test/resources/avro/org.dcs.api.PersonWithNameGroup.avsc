@@ -1,0 +1,17 @@
+{
+  "namespace": "org.dcs.api.spec",
+  "type": "record",
+  "name": "PersonGrouped",
+  "fields": [
+    {"name": "name", "type": {
+      "type": "record",
+      "name": "PersonName",
+      "fields": [
+        {"name": "first", "type": "string"},
+        {"name": "middle",  "type": "string"},
+        {"name": "last", "type": "string"}
+      ]
+    }},
+    {"name": "age", "type": "int"}
+  ]
+}

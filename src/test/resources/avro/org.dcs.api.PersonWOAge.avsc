@@ -3,8 +3,8 @@
   "type": "record",
   "name": "PersonFlat",
   "fields": [
-    {"name": "first_name", "type": "string"},
-    {"name": "middle_name",  "type": "string"},
-    {"name": "last_name", "type": "string"}
+    {"name": "first_name", "type": ["null", "string"], "default": null},
+    {"name": "middle_name",  "type": ["null", "string"], "default": null},
+    {"name": "last_name", "type": ["null", "string"], "default": null}
   ]
 }
