@@ -189,6 +189,12 @@ class TestWorkerProcessor extends Worker {
 class TestWorkerProcessorWithSchema extends TestWorkerProcessor {
   import TestWorkerProcessor._
 
+  override def execute(record: Option[GenericRecord],
+                       properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+
+    List(Right(personWoAge))
+  }
+
   override def schemaId: String = swoageid
 }
 

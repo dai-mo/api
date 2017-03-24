@@ -25,28 +25,28 @@ object CoreProperties {
 
   def readSchemaIdProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(ReadSchemaIdKey,
-      "Id of avro schema used to deserialise the input of this processor [Level " + PropertyLevel.Internal + "]",
+      "Id of avro schema used to deserialise the input of this processor to a generic record [Level " + PropertyLevel.Internal + "]",
       defaultValue,
       isDynamic = false,
       PropertyLevel.Internal)
 
   def writeSchemaIdProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(WriteSchemaIdKey,
-      "Id of avro schema used to to deserialise the output of this processor [Level" + PropertyLevel.Internal + "]",
+      "Id of avro schema used to to serialise the output of this processor to a byte array [Level" + PropertyLevel.Internal + "]",
       defaultValue,
       isDynamic = false,
       PropertyLevel.Internal)
 
   def readSchemaProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(ReadSchemaKey,
-      "Avro schema used to deserialise the input of this processor [Level" + PropertyLevel.Internal + "]",
+      "Avro read schema used to deserialise the byte array input of this processor to a generic record [Level" + PropertyLevel.Internal + "]",
       defaultValue,
       isDynamic = true,
       PropertyLevel.Internal)
 
   def writeSchemaProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(WriteSchemaKey,
-      "Avro schema used to deserialise the output of this processor [Level" + PropertyLevel.Internal + "]",
+      "Avro schema used to serialise the output of this processor to a byte array [Level" + PropertyLevel.Internal + "]",
       defaultValue,
       isDynamic = true,
       PropertyLevel.Internal)

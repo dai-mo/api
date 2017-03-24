@@ -12,7 +12,7 @@ import CoreProperties._
 trait HasProperties {
 
   def properties(): JavaList[RemoteProperty] = (
-    readSchemaIdProperty() :: writeSchemaIdProperty(schemaId) :: readSchemaProperty() :: writeSchemaProperty() ::
+    readSchemaIdProperty() :: readSchemaProperty() :: writeSchemaProperty() :: writeSchemaIdProperty(schemaId) ::
       _properties()).asJava
 
   protected def _properties(): List[RemoteProperty] =  Nil

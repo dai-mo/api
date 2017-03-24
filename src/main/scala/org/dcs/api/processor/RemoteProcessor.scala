@@ -15,6 +15,10 @@ import org.dcs.commons.serde.AvroSchemaStore
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
+case class GenericRecordObject(parent: GenericRecord, key: String) {
+  def value: Option[Object] = Option(parent.get(key))
+}
+
 object RemoteProcessor {
   val ProcessorTypeKey = "_PROCESSOR_TYPE"
 
@@ -25,31 +29,32 @@ object RemoteProcessor {
   val BatchProcessorType = "batch"
 
 
-  def resolveReadSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = {
-      var schema = coreProperties.readSchema
-      var sid: Option[String] = None
-      if (schema.isEmpty) {
-        sid = coreProperties.readSchemaId
-        schema = sid.flatMap(AvroSchemaStore.get)
-      }
-      (sid, schema)
+  def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
+    var schema = coreProperties.readSchema
+
+    if (schema.isEmpty) {
+      schema = coreProperties.readSchemaId.flatMap(AvroSchemaStore.get)
+    }
+
+    schema
   }
 
-  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): (Option[String], Option[Schema]) = {
-      var schema = coreProperties.writeSchema
-      var sid: Option[String] = None
-      if(schema.isEmpty) {
-        sid = coreProperties.writeSchemaId
-        schema =  sid.flatMap(AvroSchemaStore.get)
-      }
-      if(sid.isEmpty && schema.isEmpty) {
-        sid = schemaId
-        schema = schemaId.flatMap(AvroSchemaStore.get)
-      }
-      if(sid.isEmpty && schema.isEmpty)
-        resolveReadSchema(coreProperties)
-      else
-        (sid, schema)
+
+  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): Option[Schema] = {
+    var schema = coreProperties.writeSchema
+
+    if(schema.isEmpty) {
+      schema =  coreProperties.writeSchemaId.flatMap(AvroSchemaStore.get)
+    }
+
+    if(schema.isEmpty) {
+      schema = schemaId.flatMap(AvroSchemaStore.get)
+    }
+
+    if(schema.isEmpty)
+      resolveReadSchema(coreProperties)
+    else
+      schema
   }
 }
 
@@ -65,16 +70,16 @@ trait RemoteProcessor extends BaseProcessor
 
     try {
 
-      val (readSchemaId, readSchema) = resolveReadSchema(coreProperties)
-      if(!input.isEmpty && readSchemaId.isEmpty && readSchema.isEmpty)
+      var readSchema = resolveReadSchema(coreProperties)
+      if(!input.isEmpty && readSchema.isEmpty)
         throw new IllegalStateException("Read Schema for  " + className + " not available")
 
-      val (writeSchemaId, writeSchema) = resolveWriteSchema(coreProperties)
-      if(writeSchemaId.isEmpty && writeSchema.isEmpty)
+
+      val writeSchema = resolveWriteSchema(coreProperties)
+      if(writeSchema.isEmpty)
         throw new IllegalStateException("Write Schema for  " + className + " not available")
 
-
-      val in = Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, writeSchema))
+      val in = Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, readSchema))
 
       execute(in, properties).flatMap { out =>
         try {
@@ -82,7 +87,16 @@ trait RemoteProcessor extends BaseProcessor
             case Left(error) =>  Array(RelationshipType.FailureRelationship.getBytes,
               error.serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
             case Right(record) => Array(RelationshipType.SucessRelationship.getBytes,
-              record.serToBytes(writeSchema))
+              // FIXME: This really needs to be optimised (to avoid double ser / deser)
+              //        This is due to the fact that GenericRecord is essentially immutable
+              //        We need to extend GenericRecord to allow for removing fields
+              if(input.isEmpty || (schemaId != null && schemaId.nonEmpty))
+                record.serToBytes(writeSchema)
+              else
+                record
+                  .serToBytes(readSchema)
+                  .deSerToGenericRecord(readSchema, writeSchema)
+                  .serToBytes(writeSchema))
           }
         } catch {
           case NonFatal(t) => Array(RelationshipType.FailureRelationship.getBytes,
@@ -111,63 +125,64 @@ trait RemoteProcessor extends BaseProcessor
   // but since all public or protected the methods in Remote Processor are exposed over soap,
   // this method will also be unnecessarily exposed over soap. Hence the reason why this is a private method
   // in RemoteProcessor
-  private def resolveReadSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = processorType() match {
-    case IngestionProcessorType => (None, None)
+  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType() match {
+    case IngestionProcessorType => None
     case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
     case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   }
 
-  private def resolveWriteSchema(coreProperties: CoreProperties): (Option[String], Option[Schema]) = processorType() match {
+  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType() match {
     case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
     case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   }
 
+
   implicit class GenericRecordFields(record: Option[GenericRecord]) {
-    def getAsDouble(key: String): Option[Double] =
+    def asDouble(key: String): Option[Double] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Double])
 
-    def getAsBoolean(key: String): Option[Boolean] =
+    def asBoolean(key: String): Option[Boolean] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Boolean])
 
-    def getAsInt(key: String): Option[Int] =
+    def asInt(key: String): Option[Int] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Int])
 
-    def getAsLong(key: String): Option[Long] =
+    def asLong(key: String): Option[Long] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Long])
 
-    def getAsFloat(key: String): Option[Float] =
+    def asFloat(key: String): Option[Float] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Float])
 
-    def getAsString(key: String): Option[String] =
+    def asString(key: String): Option[String] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[String])
 
-    def getAsByteBuffer(key: String): Option[ByteBuffer] =
+    def asByteBuffer(key: String): Option[ByteBuffer] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[ByteBuffer])
 
-    def getAsCharSequence(key: String): Option[CharSequence] =
+    def asCharSequence(key: String): Option[CharSequence] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[CharSequence])
 
-    def getAsGenericRecord(key: String): Option[GenericRecord] =
+    def asGenericRecord(key: String): Option[GenericRecord] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[GenericRecord])
 
-    def getAsList[T](key: String): Option[List[T]] =
+    def asList[T](key: String): Option[List[T]] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[List[T]])
 
-    def getAsMap[K, V](key: String): Option[Map[K, V]] =
+    def asMap[K, V](key: String): Option[Map[K, V]] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Map[K, V]])
 
-    def getAsGenericFixed(key: String): Option[GenericFixed] =
+    def asGenericFixed(key: String): Option[GenericFixed] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[GenericFixed])
 
-    def getFromJsonPath(path: List[String]): Option[Object] = {
-      getFromJsonPath(path, record)
+    def fromJsonPath(path: List[String]): Option[GenericRecordObject] = {
+      fromJsonPath(path, record)
     }
 
-    private def getFromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[Object] = path match {
-      case Nil => currentRecord
-      case last :: Nil => currentRecord.flatMap(r => Option(r.get(last)))
-      case "$" :: tail => getFromJsonPath(tail, currentRecord)
-      case head :: tail => getFromJsonPath(tail, currentRecord.getAsGenericRecord(head))
+    private def fromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = path match {
+      case Nil => None
+      case last :: Nil => currentRecord.map(r => GenericRecordObject(r, last))
+      case "$" :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r)))
+      case head :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r.get(head)).map(_.asInstanceOf[GenericRecord])))
     }
   }
 
@@ -195,6 +210,10 @@ trait RemoteProcessor extends BaseProcessor
     def asMap[K, V]: Option[Map[K, V]] = value.map(_.asInstanceOf[Map[K, V]])
 
     def asGenericFixed: Option[GenericFixed] = value.map(_.asInstanceOf[GenericFixed])
+  }
+
+  implicit class GenericRecordObjectAccess(gro: Option[GenericRecordObject]) {
+    def value: Option[Object] = gro.flatMap(r => r.value)
   }
 }
 
