@@ -75,8 +75,7 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
           deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
             Some(AvroSchemaStore.errorResponseSchema()))
         (error.get("code").toString == "DCS306") &&
-          (error.get("errorMessage").toString == "Write Schema for  " +
-            ingestionProcessorWOSchemaId.className + " not available")
+          error.get("errorMessage").toString.startsWith("Write Schema for")
       }
     }
   }
