@@ -1,7 +1,7 @@
 {
   "namespace": "org.dcs.api.spec",
   "type": "record",
-  "name": "PersonFlat",
+  "name": "PersonFlatWOAge",
   "fields": [
     {"name": "first_name", "type": ["null", "string"], "default": null},
     {"name": "middle_name",  "type": ["null", "string"], "default": null},

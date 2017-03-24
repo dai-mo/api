@@ -48,13 +48,13 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
     "provide valid field mappings for correct json path <-> record combinations" in {
       val m = fieldsToMapProcessor.mappings(Some(person),
         Map(CoreProperties.FieldsToMapKey -> fieldsToMapPropertyValue))
-      val fname = m.get(FirstNameKey).map(_.asInstanceOf[String]).get
+      val fname = m(FirstNameKey).asInstanceOf[String]
       assert(fname == FirstName)
 
-      val mname = m.get(MiddleNameKey).map(_.asInstanceOf[String]).get
+      val mname = m(MiddleNameKey).asInstanceOf[String]
       assert(mname == MiddleName)
 
-      val lname = m.get(LastNameKey).map(_.asInstanceOf[String]).get
+      val lname = m(LastNameKey).asInstanceOf[String]
       assert(lname == LastName)
     }
 
