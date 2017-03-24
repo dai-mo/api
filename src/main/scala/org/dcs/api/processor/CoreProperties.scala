@@ -12,15 +12,52 @@ object CoreProperties {
   val WriteSchemaIdKey = "_WRITE_SCHEMA_ID"
   val ReadSchemaKey = "_READ_SCHEMA"
   val WriteSchemaKey = "_WRITE_SCHEMA"
-  val FieldToMapKey = "_FIELD_TO_MAP"
+  val FieldsToMapKey = "_FIELDS_TO_MAP"
+
   val SchemaNamespace = "org.dcs.processor"
 
-  def remoteProperty(key: String, defaultValue: String = null): RemoteProperty = {
-    RemoteProperty(key, key, "", defaultValue, required = true)
+  def remoteProperty(key: String, description: String, dValue: String, isDynamic: Boolean, pLevel: Int): RemoteProperty = {
+    RemoteProperty(key, key, description, defaultValue = dValue, required = !isDynamic, dynamic = isDynamic, level = pLevel)
   }
 
   def apply(properties: Map[String, String]): CoreProperties =
     new CoreProperties(properties)
+
+  def readSchemaIdProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(ReadSchemaIdKey,
+      "Id of avro schema used to deserialise the input of this processor [Level " + PropertyLevel.Internal + "]",
+      defaultValue,
+      isDynamic = false,
+      PropertyLevel.Internal)
+
+  def writeSchemaIdProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(WriteSchemaIdKey,
+      "Id of avro schema used to to deserialise the output of this processor [Level" + PropertyLevel.Internal + "]",
+      defaultValue,
+      isDynamic = false,
+      PropertyLevel.Internal)
+
+  def readSchemaProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(ReadSchemaKey,
+      "Avro schema used to deserialise the input of this processor [Level" + PropertyLevel.Internal + "]",
+      defaultValue,
+      isDynamic = true,
+      PropertyLevel.Internal)
+
+  def writeSchemaProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(WriteSchemaKey,
+      "Avro schema used to deserialise the output of this processor [Level" + PropertyLevel.Internal + "]",
+      defaultValue,
+      isDynamic = true,
+      PropertyLevel.Internal)
+
+  def fieldsToMapProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(FieldsToMapKey,
+      "Field <> JsonPath Mappings for fields required by this processor [Level" + PropertyLevel.Internal + "]",
+      defaultValue,
+      isDynamic = false,
+      PropertyLevel.Internal)
+
 }
 
 class CoreProperties(properties: Map[String, String]) {
@@ -33,7 +70,7 @@ class CoreProperties(properties: Map[String, String]) {
 
   // FIXME: The actual schemas should not be required and should be removed
   //        once the transient schemaId -> schema store is setup
-  val readSchema: Option[Schema] = properties.get(ReadSchemaKey).map(schema => if(schema == null || schema.isEmpty) null else parser.parse(schema))
-  val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).map(schema => if(schema == null || schema.isEmpty) null else parser.parse(schema))
+  val readSchema: Option[Schema] = properties.get(ReadSchemaKey).flatMap(schema => Option(if(schema == null || schema.isEmpty) null else parser.parse(schema)))
+  val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).flatMap(schema => Option(if(schema == null || schema.isEmpty) null else parser.parse(schema)))
 
 }

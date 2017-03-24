@@ -34,6 +34,16 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
           deSerToGenericRecord(writeSchema, writeSchema)
       }
     }
+
+
+    "resolve with the provided with empty write schema" in {
+      assertResult(TestIngestionProcessor.person) {
+        ingestionProcessor.
+          trigger(Array.emptyByteArray, Map(CoreProperties.WriteSchemaKey -> "").asJava)(1).
+          deSerToGenericRecord(writeSchema, writeSchema)
+      }
+    }
+
     val ingestionProcessorWOSchemaId = new TestIngestionProcessorWOSchemaId()
     val writeSchemaJson =
       using(this.getClass.getResourceAsStream("/avro/" + sid + ".avsc")) { is =>
@@ -47,6 +57,7 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
           deSerToGenericRecord(writeSchema, writeSchema)
       }
     }
+
 
     "resolve with the provided write schema id" in {
       assertResult(TestIngestionProcessor.person) {
@@ -64,8 +75,7 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
           deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
             Some(AvroSchemaStore.errorResponseSchema()))
         (error.get("code").toString == "DCS306") &&
-          (error.get("errorMessage").toString == "Write Schema for  " +
-            ingestionProcessorWOSchemaId.className + " not available")
+          error.get("errorMessage").toString.startsWith("Write Schema for")
       }
     }
   }

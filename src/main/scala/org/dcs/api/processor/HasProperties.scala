@@ -12,7 +12,7 @@ import CoreProperties._
 trait HasProperties {
 
   def properties(): JavaList[RemoteProperty] = (
-    remoteProperty(ReadSchemaIdKey) :: remoteProperty(WriteSchemaIdKey, schemaId) ::
+    readSchemaIdProperty() :: writeSchemaIdProperty(schemaId) :: readSchemaProperty() :: writeSchemaProperty() ::
       _properties()).asJava
 
   protected def _properties(): List[RemoteProperty] =  Nil
@@ -21,7 +21,7 @@ trait HasProperties {
 
   def propertyValue(propertySettings: RemoteProperty, values: JavaMap[String, String]): String = {
     if(values == null)
-      return propertySettings.defaultValue
+      propertySettings.defaultValue
     else
       values.asScala.toMap.getOrElse(propertySettings.name, propertySettings.defaultValue)
   }
@@ -38,8 +38,9 @@ case class RemoteProperty(@BeanProperty var displayName: String,
                           @BeanProperty var sensitive: Boolean = false,
                           @BeanProperty var dynamic: Boolean = false,
                           @BeanProperty var validators: JavaList[String]= List().asJava,
-                          @BeanProperty var `type`: String = PropertyType.String) {
-  def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String)
+                          @BeanProperty var `type`: String = PropertyType.String,
+                          @BeanProperty var level: Int = PropertyLevel.Open) {
+  def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String, PropertyLevel.Open)
 }
 
 case class PossibleValue(@BeanProperty var value: String,
@@ -53,6 +54,12 @@ object PropertyType {
   val Number = "NUMBER"
   val Boolean = "BOOLEAN"
   val List = "LIST"
+}
+
+object PropertyLevel {
+  val Open = 0
+  val Expert = 10
+  val Internal = 100
 }
 
 

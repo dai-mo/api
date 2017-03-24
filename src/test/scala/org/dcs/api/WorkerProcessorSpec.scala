@@ -26,17 +26,17 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
     val workerProcessor = new TestWorkerProcessor()
     val workerProcessorWithSchema = new TestWorkerProcessorWithSchema()
 
-    val readSchema = AvroSchemaStore.get(sid)
-    val writeSchema = AvroSchemaStore.get(swoageid)
+    val personSchema = AvroSchemaStore.get(sid)
+    val personWOAgeSchema = AvroSchemaStore.get(swoageid)
 
-    val input = person.serToBytes(readSchema)
+    val input = person.serToBytes(personSchema)
 
-    val readSchemaJson =
+    val personSchemaJson =
       using(this.getClass.getResourceAsStream("/avro/" + sid + ".avsc")) { is =>
         IOUtils.toString(is)
       }
 
-    val writeSchemaJson =
+    val personWOAgeSchemaJson =
       using(this.getClass.getResourceAsStream("/avro/" + swoageid + ".avsc")) { is =>
         IOUtils.toString(is)
       }
@@ -45,8 +45,8 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
       assertResult(TestWorkerProcessor.personWoAge) {
         workerProcessorWithSchema.
           trigger(input,
-            Map(ReadSchemaKey -> readSchemaJson).asJava)(1).
-          deSerToGenericRecord(writeSchema, writeSchema)
+            Map(ReadSchemaKey -> personSchemaJson).asJava)(1).
+          deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
       }
     }
 
@@ -54,8 +54,26 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
       assertResult(TestWorkerProcessor.person) {
         workerProcessor.
           trigger(input,
-            Map(ReadSchemaKey -> readSchemaJson).asJava)(1).
-          deSerToGenericRecord(readSchema, readSchema)
+            Map(ReadSchemaKey -> personSchemaJson).asJava)(1).
+          deSerToGenericRecord(personSchema, personSchema)
+      }
+    }
+
+    "resolve with the provided read schema for input with nulls" in {
+      assertResult(TestWorkerProcessor.personWithNulls) {
+        workerProcessor.
+          trigger(TestWorkerProcessor.personWithNulls.serToBytes(personSchema),
+            Map(ReadSchemaKey -> personSchemaJson).asJava)(1).
+          deSerToGenericRecord(personSchema, personSchema)
+      }
+    }
+
+    "resolve with the provided read schema without field" in {
+      assertResult(TestWorkerProcessor.personWoAge) {
+        workerProcessor.
+          trigger(input,
+            Map(ReadSchemaIdKey -> sid, WriteSchemaKey -> personWOAgeSchemaJson).asJava)(1).
+          deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
       }
     }
 
@@ -64,7 +82,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
         workerProcessor.
           trigger(input,
             Map(ReadSchemaIdKey -> sid).asJava)(1).
-          deSerToGenericRecord(readSchema, readSchema)
+          deSerToGenericRecord(personSchema, personSchema)
       }
     }
 
@@ -73,7 +91,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
         workerProcessor.
           trigger(input,
             Map(ReadSchemaIdKey -> sid, WriteSchemaIdKey -> swoageid).asJava)(1).
-          deSerToGenericRecord(writeSchema, writeSchema)
+          deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
       }
     }
 
@@ -81,8 +99,8 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
       assertResult(TestWorkerProcessor.personWoAge) {
         workerProcessor.
           trigger(input,
-            Map(ReadSchemaKey -> readSchemaJson, WriteSchemaIdKey -> swoageid).asJava)(1).
-          deSerToGenericRecord(writeSchema, writeSchema)
+            Map(ReadSchemaKey -> personSchemaJson, WriteSchemaIdKey -> swoageid).asJava)(1).
+          deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
       }
     }
 
@@ -90,33 +108,27 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
       assertResult(TestWorkerProcessor.personWoAge) {
         workerProcessor.
           trigger(input,
-            Map(ReadSchemaIdKey -> sid, WriteSchemaKey -> writeSchemaJson).asJava)(1).
-          deSerToGenericRecord(writeSchema, writeSchema)
+            Map(ReadSchemaIdKey -> sid, WriteSchemaKey -> personWOAgeSchemaJson).asJava)(1).
+          deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
       }
     }
 
     "throw an exception if write schema is provided but no read schema " in {
-          assertResult(true) {
-            val error = workerProcessor.
-              trigger(input, Map(WriteSchemaIdKey -> sid).asJava)(1).
-              deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
-                Some(AvroSchemaStore.errorResponseSchema()))
-            (error.get("code").toString == "DCS306") &&
-              (error.get("errorMessage").toString == "Read Schema for  " +
-                workerProcessor.className + " not available")
-          }
+      val error = workerProcessor.
+        trigger(input, Map(WriteSchemaIdKey -> sid).asJava)(1).
+        deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
+          Some(AvroSchemaStore.errorResponseSchema()))
+      assert(error.get("code").toString == "DCS306")
+      assert(error.get("errorMessage").toString == "Read Schema for  " + workerProcessor.className + " not available")
     }
 
     "throw an exception if no read or write schema is provided" in {
-      assertResult(true) {
-        val error = workerProcessor.
-          trigger(input, Map[String, String]().asJava)(1).
-          deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
-            Some(AvroSchemaStore.errorResponseSchema()))
-        (error.get("code").toString == "DCS306") &&
-          (error.get("errorMessage").toString == "Read Schema for  " +
-            workerProcessor.className + " not available")
-      }
+      val error = workerProcessor.
+        trigger(input, Map[String, String]().asJava)(1).
+        deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
+          Some(AvroSchemaStore.errorResponseSchema()))
+      assert(error.get("code").toString == "DCS306")
+      assert(error.get("errorMessage").toString == "Read Schema for  " + workerProcessor.className + " not available")
     }
   }
 }
@@ -149,6 +161,12 @@ object TestWorkerProcessor {
   person.put("last_name", LastName)
   person.put("age", Age)
 
+  val personWithNulls = new GenericData.Record(AvroSchemaStore.get(sid).get)
+  personWithNulls.put("first_name", null)
+  personWithNulls.put("middle_name", MiddleName)
+  personWithNulls.put("last_name", null)
+  personWithNulls.put("age", Age)
+
   val personWoAge = new GenericData.Record(AvroSchemaStore.get(swoageid).get)
   personWoAge.put("first_name", FirstName)
   personWoAge.put("middle_name", MiddleName)
@@ -156,12 +174,11 @@ object TestWorkerProcessor {
 }
 
 class TestWorkerProcessor extends Worker {
-  import TestWorkerProcessor._
 
   override def execute(record: Option[GenericRecord],
                        properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
 
-    List(Right(person))
+    List(Right(record.get))
   }
 
   override def metadata(): MetaData = MetaData()
