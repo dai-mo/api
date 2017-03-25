@@ -72,7 +72,9 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
           trigger(Array.emptyByteArray, Map[String, String]().asJava)(1).
           deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
             Some(AvroSchemaStore.errorResponseSchema()))
+        println("errorResponse : " + errorResponse.toString)
         assert(errorResponse.get("code").toString == "DCS306")
+
         assert(errorResponse.get("errorMessage").toString.startsWith("Write Schema for"))
 
     }

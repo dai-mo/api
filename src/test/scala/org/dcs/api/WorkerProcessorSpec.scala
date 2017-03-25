@@ -110,22 +110,25 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
       }
     }
 
+    var errorResponse = new TestWorkerProcessor().
+      trigger(input, Map(WriteSchemaIdKey -> sid).asJava)(1).
+      deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
+        Some(AvroSchemaStore.errorResponseSchema()))
+
+
     "throw an exception if write schema is provided but no read schema " in {
-      val errorResponse = new TestWorkerProcessor().
-        trigger(input, Map(WriteSchemaIdKey -> sid).asJava)(1).
-        deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
-          Some(AvroSchemaStore.errorResponseSchema()))
-      assert(errorResponse.get("code").toString == "DCS306")
-      assert(errorResponse.get("errorMessage").toString.startsWith("Read Schema for"))
+      assert(errorResponse.get("code").toString == "DCS306" &&
+        errorResponse.get("errorMessage").toString.startsWith("Read Schema for"))
     }
 
+    errorResponse = new TestWorkerProcessor().
+      trigger(input, Map[String, String]().asJava)(1).
+      deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
+        Some(AvroSchemaStore.errorResponseSchema()))
+
     "throw an exception if no read or write schema is provided" in {
-      val errorResponse = new TestWorkerProcessor().
-        trigger(input, Map[String, String]().asJava)(1).
-        deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
-          Some(AvroSchemaStore.errorResponseSchema()))
-      assert(errorResponse.get("code").toString == "DCS306")
-      assert(errorResponse.get("errorMessage").toString.startsWith("Read Schema for"))
+      assert(errorResponse.get("code").toString == "DCS306" &&
+        errorResponse.get("errorMessage").toString.startsWith("Read Schema for"))
     }
   }
 }
