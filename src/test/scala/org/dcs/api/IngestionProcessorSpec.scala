@@ -68,12 +68,14 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
 
     "throw an exception when no default schema exists and no schema is provided" in {
 
-        val error = new TestIngestionProcessorWOSchemaId().
+        val errorResponse = new TestIngestionProcessorWOSchemaId().
           trigger(Array.emptyByteArray, Map[String, String]().asJava)(1).
           deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
             Some(AvroSchemaStore.errorResponseSchema()))
-        assert(error.get("code").toString == "DCS306")
-        assert(error.get("errorMessage").toString.startsWith("Write Schema for"))
+        println("errorResponse : " + errorResponse.toString)
+        assert(errorResponse.get("code").toString == "DCS306")
+
+        assert(errorResponse.get("errorMessage").toString.startsWith("Write Schema for"))
 
     }
   }
