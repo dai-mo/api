@@ -23,9 +23,6 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
   "Worker Processor Schema Read / Write" should  {
 
-    val workerProcessor = new TestWorkerProcessor()
-    val workerProcessorWithSchema = new TestWorkerProcessorWithSchema()
-
     val personSchema = AvroSchemaStore.get(sid)
     val personWOAgeSchema = AvroSchemaStore.get(swoageid)
 
@@ -43,7 +40,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema / default write schema" in {
       assertResult(TestWorkerProcessor.personWoAge) {
-        workerProcessorWithSchema.
+        new TestWorkerProcessorWithSchema().
           trigger(input,
             Map(ReadSchemaKey -> personSchemaJson).asJava)(1).
           deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
@@ -52,7 +49,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema" in {
       assertResult(TestWorkerProcessor.person) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(input,
             Map(ReadSchemaKey -> personSchemaJson).asJava)(1).
           deSerToGenericRecord(personSchema, personSchema)
@@ -61,7 +58,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema for input with nulls" in {
       assertResult(TestWorkerProcessor.personWithNulls) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(TestWorkerProcessor.personWithNulls.serToBytes(personSchema),
             Map(ReadSchemaKey -> personSchemaJson).asJava)(1).
           deSerToGenericRecord(personSchema, personSchema)
@@ -70,7 +67,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema without field" in {
       assertResult(TestWorkerProcessor.personWoAge) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(input,
             Map(ReadSchemaIdKey -> sid, WriteSchemaKey -> personWOAgeSchemaJson).asJava)(1).
           deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
@@ -79,7 +76,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema id" in {
       assertResult(TestWorkerProcessor.person) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(input,
             Map(ReadSchemaIdKey -> sid).asJava)(1).
           deSerToGenericRecord(personSchema, personSchema)
@@ -88,7 +85,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema id / write schema id" in {
       assertResult(TestWorkerProcessor.personWoAge) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(input,
             Map(ReadSchemaIdKey -> sid, WriteSchemaIdKey -> swoageid).asJava)(1).
           deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
@@ -97,7 +94,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema / write schema id" in {
       assertResult(TestWorkerProcessor.personWoAge) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(input,
             Map(ReadSchemaKey -> personSchemaJson, WriteSchemaIdKey -> swoageid).asJava)(1).
           deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
@@ -106,7 +103,7 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided read schema id / write schema" in {
       assertResult(TestWorkerProcessor.personWoAge) {
-        workerProcessor.
+        new TestWorkerProcessor().
           trigger(input,
             Map(ReadSchemaIdKey -> sid, WriteSchemaKey -> personWOAgeSchemaJson).asJava)(1).
           deSerToGenericRecord(personWOAgeSchema, personWOAgeSchema)
@@ -114,21 +111,21 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
     }
 
     "throw an exception if write schema is provided but no read schema " in {
-      val error = workerProcessor.
+      val error = new TestWorkerProcessor().
         trigger(input, Map(WriteSchemaIdKey -> sid).asJava)(1).
         deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
           Some(AvroSchemaStore.errorResponseSchema()))
       assert(error.get("code").toString == "DCS306")
-      assert(error.get("errorMessage").toString == "Read Schema for  " + workerProcessor.className + " not available")
+      assert(error.get("errorMessage").toString.startsWith("Read Schema for"))
     }
 
     "throw an exception if no read or write schema is provided" in {
-      val error = workerProcessor.
+      val error = new TestWorkerProcessor().
         trigger(input, Map[String, String]().asJava)(1).
         deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
           Some(AvroSchemaStore.errorResponseSchema()))
       assert(error.get("code").toString == "DCS306")
-      assert(error.get("errorMessage").toString == "Read Schema for  " + workerProcessor.className + " not available")
+      assert(error.get("errorMessage").toString.startsWith("Read Schema for"))
     }
   }
 }

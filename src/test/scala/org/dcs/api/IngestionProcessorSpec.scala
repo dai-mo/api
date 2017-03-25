@@ -24,12 +24,11 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
 
   "Ingestion Processor Schema Read / Write" should  {
 
-    val ingestionProcessor = new TestIngestionProcessor()
     val writeSchema: Option[Schema] = AvroSchemaStore.get(sid)
 
     "resolve with the default schema" in {
       assertResult(TestIngestionProcessor.person) {
-        ingestionProcessor.
+        new TestIngestionProcessor().
           trigger(Array.emptyByteArray, Map[String, String]().asJava)(1).
           deSerToGenericRecord(writeSchema, writeSchema)
       }
@@ -38,13 +37,12 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided with empty write schema" in {
       assertResult(TestIngestionProcessor.person) {
-        ingestionProcessor.
+        new TestIngestionProcessor().
           trigger(Array.emptyByteArray, Map(CoreProperties.WriteSchemaKey -> "").asJava)(1).
           deSerToGenericRecord(writeSchema, writeSchema)
       }
     }
 
-    val ingestionProcessorWOSchemaId = new TestIngestionProcessorWOSchemaId()
     val writeSchemaJson =
       using(this.getClass.getResourceAsStream("/avro/" + sid + ".avsc")) { is =>
         IOUtils.toString(is)
@@ -52,7 +50,7 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided write schema" in {
       assertResult(TestIngestionProcessor.person) {
-        ingestionProcessorWOSchemaId.
+        new TestIngestionProcessorWOSchemaId().
           trigger(Array.emptyByteArray, Map(CoreProperties.WriteSchemaKey -> writeSchemaJson).asJava)(1).
           deSerToGenericRecord(writeSchema, writeSchema)
       }
@@ -61,7 +59,7 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
 
     "resolve with the provided write schema id" in {
       assertResult(TestIngestionProcessor.person) {
-        ingestionProcessorWOSchemaId.
+        new TestIngestionProcessorWOSchemaId().
           trigger(Array.emptyByteArray,
             Map(CoreProperties.WriteSchemaIdKey -> TestIngestionProcessor.sid).asJava)(1).
           deSerToGenericRecord(writeSchema, writeSchema)
@@ -70,7 +68,7 @@ class IngestionProcessorSpec extends ApiUnitWordSpec {
 
     "throw an exception when no default schema exists and no schema is provided" in {
 
-        val error = ingestionProcessorWOSchemaId.
+        val error = new TestIngestionProcessorWOSchemaId().
           trigger(Array.emptyByteArray, Map[String, String]().asJava)(1).
           deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
             Some(AvroSchemaStore.errorResponseSchema()))
