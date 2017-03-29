@@ -110,25 +110,25 @@ class WorkerProcessorSpec extends ApiUnitWordSpec {
       }
     }
 
-    var errorResponse = new TestWorkerProcessor().
+    var er1 = new TestWorkerProcessor().
       trigger(input, Map(WriteSchemaIdKey -> sid).asJava)(1).
       deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
         Some(AvroSchemaStore.errorResponseSchema()))
 
 
     "throw an exception if write schema is provided but no read schema " in {
-      assert(errorResponse.get("code").toString == "DCS306" &&
-        errorResponse.get("errorMessage").toString.startsWith("Read Schema for"))
+      assert(er1.get("code").toString == "DCS306" &&
+        er1.get("errorMessage").toString.startsWith("Read Schema for"))
     }
 
-    errorResponse = new TestWorkerProcessor().
+    val er2 = new TestWorkerProcessor().
       trigger(input, Map[String, String]().asJava)(1).
       deSerToGenericRecord(Some(AvroSchemaStore.errorResponseSchema()),
         Some(AvroSchemaStore.errorResponseSchema()))
 
     "throw an exception if no read or write schema is provided" in {
-      assert(errorResponse.get("code").toString == "DCS306" &&
-        errorResponse.get("errorMessage").toString.startsWith("Read Schema for"))
+      assert(er2.get("code").toString == "DCS306" &&
+        er2.get("errorMessage").toString.startsWith("Read Schema for"))
     }
   }
 }

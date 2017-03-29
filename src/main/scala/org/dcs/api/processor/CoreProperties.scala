@@ -12,7 +12,9 @@ object CoreProperties {
   val WriteSchemaIdKey = "_WRITE_SCHEMA_ID"
   val ReadSchemaKey = "_READ_SCHEMA"
   val WriteSchemaKey = "_WRITE_SCHEMA"
+
   val FieldsToMapKey = "_FIELDS_TO_MAP"
+  val FieldActionsKey = "_FIELDS_ACTIONS"
 
   val SchemaNamespace = "org.dcs.processor"
 
@@ -54,6 +56,13 @@ object CoreProperties {
   def fieldsToMapProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(FieldsToMapKey,
       "Field <> JsonPath Mappings for fields required by this processor [Level" + PropertyLevel.Internal + "]",
+      defaultValue,
+      isDynamic = false,
+      PropertyLevel.Internal)
+
+  def fieldActionsProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(FieldActionsKey,
+      "A list of actions mapped to json paths which are executed by the processor [Level" + PropertyLevel.Internal + "]",
       defaultValue,
       isDynamic = false,
       PropertyLevel.Internal)

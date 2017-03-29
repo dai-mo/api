@@ -15,10 +15,9 @@ trait FieldsToMap extends RemoteProcessor {
   def fields: List[String]
 
   override def properties(): JavaList[RemoteProperty] = {
-    var props = super.properties()
+    val props = new util.ArrayList(super.properties())
 
     if(fields.nonEmpty)
-      props = new util.ArrayList(props)
       props.add(CoreProperties.fieldsToMapProperty(fields.map(f => (f, "$." + f)).toMap.toJson))
     props
   }
@@ -32,7 +31,7 @@ trait FieldsToMap extends RemoteProcessor {
       properties.asScala.
         find(p => p._1 == CoreProperties.FieldsToMapKey).
         map(p => p._2.toMapOf[String]).
-        map(fmap => fmap.map(fmap => (fmap._1, record.fromJsonPath(fmap._2.split("\\.").toList))).
+        map(fmap => fmap.map(fmap => (fmap._1, record.fromJsonPath(fmap._2))).
           map(fmap => (fmap._1, fmap._2.flatMap(_.value))).
           filter(fmap => fmap._2.isDefined).
           map(fmap => (fmap._1, fmap._2.get))).
