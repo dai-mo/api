@@ -56,6 +56,17 @@ object RemoteProcessor {
     else
       schema
   }
+
+  def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
+    fromJsonPath(path.split("\\.").toList, currentRecord)
+  }
+
+  def fromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = path match {
+    case Nil => None
+    case last :: Nil => currentRecord.map(r => GenericRecordObject(r, last))
+    case "$" :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r)))
+    case head :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r.get(head)).map(_.asInstanceOf[GenericRecord])))
+  }
 }
 
 trait RemoteProcessor extends BaseProcessor
@@ -154,7 +165,7 @@ trait RemoteProcessor extends BaseProcessor
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[Float])
 
     def asString(key: String): Option[String] =
-      record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[String])
+      record.flatMap(r => Option(r.get(key))).map(_.toString)
 
     def asByteBuffer(key: String): Option[ByteBuffer] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[ByteBuffer])
@@ -174,16 +185,14 @@ trait RemoteProcessor extends BaseProcessor
     def asGenericFixed(key: String): Option[GenericFixed] =
       record.flatMap(r => Option(r.get(key))).map(_.asInstanceOf[GenericFixed])
 
-    def fromJsonPath(path: List[String]): Option[GenericRecordObject] = {
-      fromJsonPath(path, record)
+    def fromJsonPath(path: String): Option[GenericRecordObject] = {
+      fromJsonPath(path.split("\\.").toList)
     }
 
-    private def fromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = path match {
-      case Nil => None
-      case last :: Nil => currentRecord.map(r => GenericRecordObject(r, last))
-      case "$" :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r)))
-      case head :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r.get(head)).map(_.asInstanceOf[GenericRecord])))
+    def fromJsonPath(path: List[String]): Option[GenericRecordObject] = {
+      RemoteProcessor.fromJsonPath(path, record)
     }
+
   }
 
   implicit class GenericRecordCasts(value: Option[Object]) {
@@ -197,7 +206,7 @@ trait RemoteProcessor extends BaseProcessor
 
     def asFloat: Option[Float] = value.map(_.asInstanceOf[Float])
 
-    def asString: Option[String] = value.map(_.asInstanceOf[String])
+    def asString: Option[String] = value.map(_.toString)
 
     def asByteBuffer: Option[ByteBuffer] = value.map(_.asInstanceOf[ByteBuffer])
 
