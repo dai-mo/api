@@ -5,7 +5,7 @@ import java.util
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.util.Utf8
 import org.apache.commons.io.IOUtils
-import org.dcs.api.processor.{CoreProperties, Ingestion, MetaData, Worker}
+import org.dcs.api.processor._
 import org.dcs.commons.error.ErrorResponse
 import org.dcs.commons.serde.AvroSchemaStore
 
@@ -176,12 +176,12 @@ object TestWorkerProcessor {
 class TestWorkerProcessor extends Worker {
 
   override def execute(record: Option[GenericRecord],
-                       properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+                       properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
-    List(Right(record.get))
+    List(Right((RelationshipType.Success.id, record.get)))
   }
 
-  override def metadata(): MetaData = MetaData()
+  override def metadata(): MetaData = MetaData("")
 
   override def schemaId: String = null
 }
@@ -190,9 +190,9 @@ class TestWorkerProcessorWithSchema extends TestWorkerProcessor {
   import TestWorkerProcessor._
 
   override def execute(record: Option[GenericRecord],
-                       properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+                       properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
-    List(Right(personWoAge))
+    List(Right((RelationshipType.Success.id, personWoAge)))
   }
 
   override def schemaId: String = swoageid

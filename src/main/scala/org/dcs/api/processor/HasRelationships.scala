@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
   */
 trait HasRelationships {
 
-  def relationships(): JavaSet[RemoteRelationship] = (_relationships() + RelationshipType.FAILURE).asJava
+  def relationships(): JavaSet[RemoteRelationship] = (_relationships() + RelationshipType.Failure).asJava
 
   protected def _relationships(): Set[RemoteRelationship] = Set()
 
@@ -23,16 +23,20 @@ case class RemoteRelationship(@BeanProperty var id: String,
 }
 
 object RelationshipType {
-  val SucessRelationship = "success"
-  val FailureRelationship = "failure"
-  val UnknownRelationship = "unknown"
+  val Invalid = RemoteRelationship("invalid",
+    "All records with invalid values will be routed to this relationship")
 
-  val SUCCESS = RemoteRelationship(RelationshipType.SucessRelationship,
+  val Valid = RemoteRelationship("valid",
+    "All records with valid values will be routed to this relationship")
+
+  val Success = RemoteRelationship("success",
     "All status updates will be routed to this relationship")
-  val FAILURE = RemoteRelationship(RelationshipType.FailureRelationship,
+
+  val Failure = RemoteRelationship("failure",
     "All failed updates will be routed to this relationship")
-  val UNKNOWN = RemoteRelationship(RelationshipType.UnknownRelationship,
-    "Represents an nknown Relationship")
+
+  val Unknown = RemoteRelationship( "unknown",
+    "Represents an unknown Relationship")
 }
 
 

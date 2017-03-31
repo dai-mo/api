@@ -115,12 +115,12 @@ class TestFieldsToMapProcessor extends Worker with FieldsToMap {
 
   override def fields: List[String] = List(FirstNameKey, MiddleNameKey, LastNameKey)
 
-  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
-    List(Right(record.get))
+    List(Right((RelationshipType.Success.id, record.get)))
   }
 
-  override def metadata(): MetaData = MetaData()
+  override def metadata(): MetaData = MetaData("")
 
 
 }

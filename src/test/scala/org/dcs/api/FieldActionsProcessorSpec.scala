@@ -90,7 +90,7 @@ class TestFieldActionsProcessor extends Worker with FieldActions {
 
   override def cmds: List[String] = List("contains", "starts with")
 
-  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
     val isValid: Boolean = actions(properties).map(a => a.cmd match {
       case ContainsCmd => a.fromJsonPath(record).value.asString.exists(s => s.contains(a.args))
       case StartsWithCmd => a.fromJsonPath(record).value.asString.exists(s => s.contains(a.args))
@@ -98,10 +98,10 @@ class TestFieldActionsProcessor extends Worker with FieldActions {
     }).forall(identity)
 
     if(isValid)
-      List(Right(record.get))
+      List(Right((RelationshipType.Valid.id, record.get)))
     else
-      List(Right(null))
+      List(Right((RelationshipType.Invalid.id, record.get)))
   }
 
-  override def metadata(): MetaData = MetaData()
+  override def metadata(): MetaData = MetaData("")
 }

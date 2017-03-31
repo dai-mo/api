@@ -15,7 +15,7 @@ trait RemoteProcessorService extends RemoteProcessor
   with DefinitionStore
   with StatelessProcessor {
 
-  override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+  override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
     instance().execute(record, properties)
   }
 
