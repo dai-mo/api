@@ -13,8 +13,12 @@ trait HasMetaData {
   def metadata():MetaData
 }
 
-case class MetaData(@BeanProperty var description: String = "",
-                    @BeanProperty var tags: JavaList[String] = List().asJava,
-                    @BeanProperty var related: JavaList[String] = List().asJava) {
+object MetaData {
+  def apply(description: String, tags: List[String] = List(), related: List[String] = List()): MetaData =
+    new MetaData(description, tags.asJava, related.asJava)
+}
+case class MetaData(@BeanProperty var description: String ,
+                    @BeanProperty var tags: JavaList[String],
+                    @BeanProperty var related: JavaList[String]) {
   def this() = this("", List().asJava, List().asJava)
 }

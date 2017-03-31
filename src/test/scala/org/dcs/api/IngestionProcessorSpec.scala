@@ -6,7 +6,7 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.util.Utf8
 import org.apache.commons.io.IOUtils
-import org.dcs.api.processor.{CoreProperties, Ingestion, MetaData}
+import org.dcs.api.processor.{CoreProperties, Ingestion, MetaData, RelationshipType}
 import org.dcs.commons.error.ErrorResponse
 import org.dcs.commons.serde.AvroSchemaStore
 
@@ -113,12 +113,12 @@ class TestIngestionProcessor extends Ingestion {
   import TestIngestionProcessor._
 
   override def execute(record: Option[GenericRecord],
-                       properties: util.Map[String, String]): List[Either[ErrorResponse, AnyRef]] = {
+                       properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
-    List(Right(person))
+    List(Right((RelationshipType.Success.id, person)))
   }
 
-  override def metadata(): MetaData = MetaData()
+  override def metadata(): MetaData = MetaData("")
 
 }
 

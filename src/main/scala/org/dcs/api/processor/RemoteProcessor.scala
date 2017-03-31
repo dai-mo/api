@@ -73,11 +73,15 @@ trait RemoteProcessor extends BaseProcessor
   with ProcessorDefinition {
   import RemoteProcessor._
 
-  def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, AnyRef]]
+  def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]]
 
   def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
-    val coreProperties: CoreProperties = CoreProperties(properties.asScala.toMap)
+    def resultError(t: Throwable) = Array(RelationshipType.Failure.id.getBytes,
+      ErrorConstants.DCS306.withErrorMessage(Option(t.getMessage).getOrElse(t.getClass.getName)).
+        avroRecord().
+        serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
 
+    val coreProperties: CoreProperties = CoreProperties(properties.asScala.toMap)
 
     try {
 
@@ -95,32 +99,26 @@ trait RemoteProcessor extends BaseProcessor
       execute(in, properties).flatMap { out =>
         try {
           out match {
-            case Left(error) =>  Array(RelationshipType.FailureRelationship.getBytes,
+            case Left(error) =>  Array(RelationshipType.Failure.id.getBytes,
               error.serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
-            case Right(record) => Array(RelationshipType.SucessRelationship.getBytes,
+            case Right(relRecord) => Array(relRecord._1.getBytes,
               // FIXME: This really needs to be optimised (to avoid double ser / deser)
               //        This is due to the fact that GenericRecord is essentially immutable
               //        We need to extend GenericRecord to allow for removing fields
               if(input.isEmpty || (schemaId != null && schemaId.nonEmpty))
-                record.serToBytes(writeSchema)
+                relRecord._2.serToBytes(writeSchema)
               else
-                record
+                relRecord._2
                   .serToBytes(readSchema)
                   .deSerToGenericRecord(readSchema, writeSchema)
                   .serToBytes(writeSchema))
           }
         } catch {
-          case NonFatal(t) => Array(RelationshipType.FailureRelationship.getBytes,
-            ErrorConstants.DCS306.withErrorMessage(Option(t.getMessage).getOrElse(t.getClass.getName)).
-              avroRecord().
-              serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+          case NonFatal(t) => resultError(t)
         }
       }.toArray
     } catch {
-      case NonFatal(t) => Array(RelationshipType.FailureRelationship.getBytes,
-        ErrorConstants.DCS306.withErrorMessage(Option(t.getMessage).getOrElse(t.getClass.getName)).
-          avroRecord().
-          serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+      case NonFatal(t) => resultError(t)
     }
   }
 
