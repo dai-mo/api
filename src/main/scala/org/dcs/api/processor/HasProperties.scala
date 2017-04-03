@@ -11,8 +11,12 @@ import CoreProperties._
   */
 trait HasProperties {
 
+  def processorType(): String
+
   def properties(): JavaList[RemoteProperty] = (
-    readSchemaIdProperty() :: readSchemaProperty() :: writeSchemaProperty() :: writeSchemaIdProperty(schemaId) ::
+    readSchemaIdProperty() :: readSchemaProperty() ::
+      writeSchemaProperty() :: writeSchemaIdProperty(schemaId) ::
+      processorTypeProperty(processorType()) ::
       _properties()).asJava
 
   protected def _properties(): List[RemoteProperty] =  Nil
@@ -37,7 +41,7 @@ case class RemoteProperty(@BeanProperty var displayName: String,
                           @BeanProperty var required: Boolean = false,
                           @BeanProperty var sensitive: Boolean = false,
                           @BeanProperty var dynamic: Boolean = false,
-                          @BeanProperty var validators: JavaList[String]= List().asJava,
+                          @BeanProperty var validators: JavaList[String]= List[String]().asJava,
                           @BeanProperty var `type`: String = PropertyType.String,
                           @BeanProperty var level: Int = PropertyLevel.Open) {
   def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String, PropertyLevel.Open)

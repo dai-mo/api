@@ -5,5 +5,5 @@ package org.dcs.api.processor
   */
 object Attributes {
   val RelationshipAttributeKey = "_rel"
-  
+  val ComponentTypeAttributeKey = "_ctype"
 }

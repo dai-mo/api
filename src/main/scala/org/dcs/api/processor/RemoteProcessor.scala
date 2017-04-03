@@ -20,7 +20,6 @@ case class GenericRecordObject(parent: GenericRecord, key: String) {
 }
 
 object RemoteProcessor {
-  val ProcessorTypeKey = "_PROCESSOR_TYPE"
 
   val UnknownProcessorType = "unknown"
   val IngestionProcessorType = "ingestion"
@@ -122,8 +121,6 @@ trait RemoteProcessor extends BaseProcessor
     }
   }
 
-  def processorType(): String
-
   def className: String = this.getClass.getName
 
   def schemaId: String = null
@@ -134,13 +131,13 @@ trait RemoteProcessor extends BaseProcessor
   // but since all public or protected the methods in Remote Processor are exposed over soap,
   // this method will also be unnecessarily exposed over soap. Hence the reason why this is a private method
   // in RemoteProcessor
-  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType() match {
+  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
     case IngestionProcessorType => None
     case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
     case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   }
 
-  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType() match {
+  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
     case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
     case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   }
