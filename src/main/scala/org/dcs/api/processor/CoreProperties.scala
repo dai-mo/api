@@ -16,10 +16,12 @@ object CoreProperties {
   val FieldsToMapKey = "_FIELDS_TO_MAP"
   val FieldActionsKey = "_FIELDS_ACTIONS"
 
+  val ProcessorTypeKey = "_PROCESSOR_TYPE"
+
   val SchemaNamespace = "org.dcs.processor"
 
-  def remoteProperty(key: String, description: String, dValue: String, isDynamic: Boolean, pLevel: Int): RemoteProperty = {
-    RemoteProperty(key, key, description, defaultValue = dValue, required = !isDynamic, dynamic = isDynamic, level = pLevel)
+  def remoteProperty(key: String, description: String, dValue: String, isRequired: Boolean, isDynamic: Boolean, pLevel: Int): RemoteProperty = {
+    RemoteProperty(key, key, description, defaultValue = dValue, required = isRequired, dynamic = isDynamic, level = pLevel)
   }
 
   def apply(properties: Map[String, String]): CoreProperties =
@@ -29,6 +31,7 @@ object CoreProperties {
     remoteProperty(ReadSchemaIdKey,
       "Id of avro schema used to deserialise the input of this processor to a generic record [Level " + PropertyLevel.Internal + "]",
       defaultValue,
+      isRequired = false,
       isDynamic = false,
       PropertyLevel.Internal)
 
@@ -36,6 +39,7 @@ object CoreProperties {
     remoteProperty(WriteSchemaIdKey,
       "Id of avro schema used to to serialise the output of this processor to a byte array [Level" + PropertyLevel.Internal + "]",
       defaultValue,
+      isRequired = false,
       isDynamic = false,
       PropertyLevel.Internal)
 
@@ -43,6 +47,7 @@ object CoreProperties {
     remoteProperty(ReadSchemaKey,
       "Avro read schema used to deserialise the byte array input of this processor to a generic record [Level" + PropertyLevel.Internal + "]",
       defaultValue,
+      isRequired = false,
       isDynamic = true,
       PropertyLevel.Internal)
 
@@ -50,6 +55,7 @@ object CoreProperties {
     remoteProperty(WriteSchemaKey,
       "Avro schema used to serialise the output of this processor to a byte array [Level" + PropertyLevel.Internal + "]",
       defaultValue,
+      isRequired = false,
       isDynamic = true,
       PropertyLevel.Internal)
 
@@ -57,6 +63,7 @@ object CoreProperties {
     remoteProperty(FieldsToMapKey,
       "Field <> JsonPath Mappings for fields required by this processor [Level" + PropertyLevel.Internal + "]",
       defaultValue,
+      isRequired = false,
       isDynamic = false,
       PropertyLevel.Internal)
 
@@ -64,6 +71,15 @@ object CoreProperties {
     remoteProperty(FieldActionsKey,
       "A list of actions mapped to json paths which are executed by the processor [Level" + PropertyLevel.Internal + "]",
       defaultValue,
+      isRequired = false,
+      isDynamic = false,
+      PropertyLevel.Internal)
+
+  def processorTypeProperty(defaultValue: String = null): RemoteProperty =
+    remoteProperty(ProcessorTypeKey,
+      "Type of processor [Level" + PropertyLevel.Internal + "]",
+      defaultValue,
+      isRequired = true,
       isDynamic = false,
       PropertyLevel.Internal)
 

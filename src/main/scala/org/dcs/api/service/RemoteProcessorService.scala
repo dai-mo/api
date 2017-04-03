@@ -33,7 +33,7 @@ trait RemoteProcessorService extends RemoteProcessor
                              values: JavaMap[String, String]): String =
     getDef(instance()).propertyValue(propertySettings, values)
 
-  override def processorType(): String = instance().processorType()
+  override def processorType(): String = instance().processorType
 
   override  def configuration: Configuration =
     getDef(instance()).configuration
