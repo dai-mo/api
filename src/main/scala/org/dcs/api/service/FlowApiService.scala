@@ -3,6 +3,8 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
+import org.dcs.api.processor.RemoteProcessor
+
 import scala.beans.BeanProperty
 import scala.concurrent.Future
 
@@ -73,6 +75,12 @@ case class ProcessorType(@BeanProperty var pType:String,
   def this() = this("", "", Nil)
 }
 
+case class ProcessorServiceDefinition(@BeanProperty var processorServiceClassName: String,
+                                      @BeanProperty var processorType: String,
+                                      @BeanProperty var stateful: Boolean) {
+  def this() = this("", RemoteProcessor.WorkerProcessorType, false)
+}
+
 trait ProcessorApiService {
   def types(userId: String): Future[List[ProcessorType]]
   def typesSearchTags(str:String, userId: String): Future[List[ProcessorType]]
@@ -82,6 +90,8 @@ trait ProcessorApiService {
   def stop(processorId: String, userId: String): Future[ProcessorInstance]
   def remove(processorId: String, userId: String): Future[Boolean]
 }
+
+
 
 // --- Processor Models/ API End ---
 
