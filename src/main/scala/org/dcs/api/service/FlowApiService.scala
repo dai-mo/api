@@ -3,7 +3,7 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
-import org.dcs.api.processor.RemoteProcessor
+import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
 
 import scala.beans.BeanProperty
 import scala.concurrent.Future
@@ -67,8 +67,10 @@ case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var processorType: String,
                              @BeanProperty var status: String,
                              @BeanProperty var version: Long,
-                             @BeanProperty var properties: Map[String, String]) {
-  def this() = this("", "", "", "", "", 0.0.toLong, Map())
+                             @BeanProperty var properties: Map[String, String],
+                             @BeanProperty var propertyDefinitions: List[RemoteProperty],
+                             @BeanProperty var validationErrors: List[String]) {
+  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Nil)
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -84,13 +86,15 @@ case class ProcessorServiceDefinition(@BeanProperty var processorServiceClassNam
 }
 
 trait ProcessorApiService {
-  def types(userId: String): Future[List[ProcessorType]]
-  def typesSearchTags(str:String, userId: String): Future[List[ProcessorType]]
-  def create(processorServiceDefinition: ProcessorServiceDefinition, processGroupId: String): Future[ProcessorInstance]
-  def instance(processorId: String, userId: String): Future[ProcessorInstance]
+  def types(): Future[List[ProcessorType]]
+  def typesSearchTags(str:String): Future[List[ProcessorType]]
+  def create(processorServiceDefinition: ProcessorServiceDefinition,
+             processGroupId: String,
+             clientId: String): Future[ProcessorInstance]
+  def instance(processorId: String): Future[ProcessorInstance]
   def start(processorId: String, userId: String): Future[ProcessorInstance]
   def stop(processorId: String, userId: String): Future[ProcessorInstance]
-  def remove(processorId: String, userId: String): Future[Boolean]
+  def remove(processorId: String, version: Long, clientId: String): Future[Boolean]
 }
 
 
