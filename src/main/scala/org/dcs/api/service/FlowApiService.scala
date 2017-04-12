@@ -46,13 +46,14 @@ case class FlowTemplate(@BeanProperty var id: String,
 
 
 trait FlowApiService {
-  def templates(clientId: String): Future[List[FlowTemplate]]
-  def instantiate(flowTemplateId: String, userId: String, authToken: String): Future[FlowInstance]
-  def instance(flowInstanceId: String, userId: String, authToken: String): Future[FlowInstance]
-  def instances(userId: String, authToken: String): Future[List[FlowInstance]]
-  def start(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
-  def stop(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
-  def remove(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
+  def templates(): Future[List[FlowTemplate]]
+  def create(flowName: String): Future[FlowInstance]
+  def instantiate(flowTemplateId: String): Future[FlowInstance]
+  def instance(flowInstanceId: String): Future[FlowInstance]
+  def instances(): Future[List[FlowInstance]]
+  def start(flowInstanceId: String): Future[Boolean]
+  def stop(flowInstanceId: String): Future[Boolean]
+  def remove(flowInstanceId: String): Future[Boolean]
 }
 
 // --- Flow Models/ API End ---
@@ -61,12 +62,13 @@ trait FlowApiService {
 // --- Processor Models/ API Start ---
 
 case class ProcessorInstance(@BeanProperty var id: String,
+                             @BeanProperty var name: String,
                              @BeanProperty var `type`: String,
                              @BeanProperty var processorType: String,
                              @BeanProperty var status: String,
                              @BeanProperty var version: Long,
                              @BeanProperty var properties: Map[String, String]) {
-  def this() = this("", "", "", "", 0.0.toLong, Map())
+  def this() = this("", "", "", "", "", 0.0.toLong, Map())
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -84,7 +86,7 @@ case class ProcessorServiceDefinition(@BeanProperty var processorServiceClassNam
 trait ProcessorApiService {
   def types(userId: String): Future[List[ProcessorType]]
   def typesSearchTags(str:String, userId: String): Future[List[ProcessorType]]
-  def create(name: String, ptype: String, clientToken: String): Future[ProcessorInstance]
+  def create(processorServiceDefinition: ProcessorServiceDefinition, processGroupId: String): Future[ProcessorInstance]
   def instance(processorId: String, userId: String): Future[ProcessorInstance]
   def start(processorId: String, userId: String): Future[ProcessorInstance]
   def stop(processorId: String, userId: String): Future[ProcessorInstance]
