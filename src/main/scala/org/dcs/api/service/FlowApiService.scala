@@ -53,7 +53,7 @@ trait FlowApiService {
   def instances(): Future[List[FlowInstance]]
   def start(flowInstanceId: String): Future[Boolean]
   def stop(flowInstanceId: String): Future[Boolean]
-  def remove(flowInstanceId: String): Future[Boolean]
+  def remove(flowInstanceId: String, version: Long, clientId: String): Future[Boolean]
 }
 
 // --- Flow Models/ API End ---
@@ -92,8 +92,8 @@ trait ProcessorApiService {
              processGroupId: String,
              clientId: String): Future[ProcessorInstance]
   def instance(processorId: String): Future[ProcessorInstance]
-  def start(processorId: String, userId: String): Future[ProcessorInstance]
-  def stop(processorId: String, userId: String): Future[ProcessorInstance]
+  def start(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
+  def stop(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def remove(processorId: String, version: Long, clientId: String): Future[Boolean]
 }
 
