@@ -61,6 +61,17 @@ trait FlowApiService {
 
 // --- Processor Models/ API Start ---
 
+case class ProcessorConfig(@BeanProperty var autoTerminatedRelationships: Set[String],
+                           @BeanProperty var bulletinLevel: String,
+                           @BeanProperty var comments: String,
+                           @BeanProperty var concurrentlySchedulableTaskCount: Int,
+                           @BeanProperty var penaltyDuration: String,
+                           @BeanProperty var schedulingPeriod: String,
+                           @BeanProperty var schedulingStrategy: String,
+                           @BeanProperty var yieldDuration: String) {
+  def this() = this(Set(), "", "", 1, "", "", "", "")
+}
+
 case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var name: String,
                              @BeanProperty var `type`: String,
@@ -69,8 +80,9 @@ case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var version: Long,
                              @BeanProperty var properties: Map[String, String],
                              @BeanProperty var propertyDefinitions: List[RemoteProperty],
-                             @BeanProperty var validationErrors: List[String]) {
-  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Nil)
+                             @BeanProperty var validationErrors: List[String],
+                             @BeanProperty var config: ProcessorConfig) {
+  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Nil, new ProcessorConfig())
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -91,6 +103,7 @@ trait ProcessorApiService {
   def create(processorServiceDefinition: ProcessorServiceDefinition,
              processGroupId: String,
              clientId: String): Future[ProcessorInstance]
+  def update(processorInstance: ProcessorInstance, clientId: String): Future[ProcessorInstance]
   def instance(processorId: String): Future[ProcessorInstance]
   def start(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def stop(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
