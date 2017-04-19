@@ -3,6 +3,8 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
 
 import scala.beans.BeanProperty
@@ -13,17 +15,6 @@ import scala.concurrent.Future
   */
 
 // --- Flow Models/ API Start ---
-
-case class ConnectionPort(@BeanProperty var id: String,
-                          @BeanProperty var `type`: String) {
-  def this() = this("", "")
-}
-
-case class Connection(@BeanProperty var id: String,
-                      @BeanProperty var source: ConnectionPort,
-                      @BeanProperty var destination: ConnectionPort) {
-  def this() = this("", ConnectionPort("", ""), ConnectionPort("", ""))
-}
 
 case class FlowInstance(@BeanProperty var id: String,
                         @BeanProperty var name: String,
@@ -47,12 +38,12 @@ case class FlowTemplate(@BeanProperty var id: String,
 
 trait FlowApiService {
   def templates(): Future[List[FlowTemplate]]
-  def create(flowName: String): Future[FlowInstance]
-  def instantiate(flowTemplateId: String): Future[FlowInstance]
+  def create(flowName: String, clientId: String): Future[FlowInstance]
+  def instantiate(flowTemplateId: String, clientId: String): Future[FlowInstance]
   def instance(flowInstanceId: String): Future[FlowInstance]
   def instances(): Future[List[FlowInstance]]
-  def start(flowInstanceId: String): Future[Boolean]
-  def stop(flowInstanceId: String): Future[Boolean]
+  def start(flowInstanceId: String): Future[FlowInstance]
+  def stop(flowInstanceId: String): Future[FlowInstance]
   def remove(flowInstanceId: String, version: Long, clientId: String): Future[Boolean]
 }
 
@@ -114,6 +105,44 @@ trait ProcessorApiService {
 
 // --- Processor Models/ API End ---
 
+// --- Connection Models/ API Start ---
+
+case class Connectable(@BeanProperty var id: String,
+                       @BeanProperty var componentType: String,
+                       @BeanProperty var flowInstanceId: String) {
+  def this() = this("", "", "")
+}
+
+@JsonInclude(Include.NON_NULL)
+case class Connection(@BeanProperty var id: String,
+                      @BeanProperty var name: String,
+                      @BeanProperty var version: Long,
+                      @BeanProperty var source: Connectable,
+                      @BeanProperty var destination: Connectable,
+                      @BeanProperty var sourceRelationships: Set[String],
+                      @BeanProperty var flowFileExpiration: String,
+                      @BeanProperty var backPressureDataSize: String,
+                      @BeanProperty var backPressureObjectThreshold: Long,
+                      @BeanProperty var prioritizers: List[String]) {
+  def this() = this("", "", -1, Connectable("", "", ""), Connectable("", "", ""), Set(), "", "", -1, Nil)
+}
+
+trait ConnectionApiService {
+  def create(flowInstanceId: String,
+             sourceConnectable: Connectable,
+             destinationConnectable: Connectable,
+             sourceRelationships: Set[String],
+             name: Option[String],
+             flowFileExpiration: Option[String],
+             backPressureDataSize: Option[String],
+             backPressureObjectThreshold: Option[Long],
+             prioritizers: Option[List[String]],
+             clientId: String): Future[Connection]
+  def update(connection: Connection, clientId: String): Future[Connection]
+}
+
+// --- Connection Models/ API End ---
+
 
 // --- Provenance Models/ API Start ---
 
@@ -141,3 +170,12 @@ trait IFlowDataService {
 }
 
 // --- Flow Data Models / API end ---
+
+object FlowComponent {
+  val ProcessorType = "PROCESSOR"
+  val RemoteInputPortType = "REMOTE_INPUT_PORT"
+  val RemoteOutputPortType = "REMOTE_OUTPUT_PORT"
+  val InputPortType = "INPUT_PORT"
+  val OutputPortType = "OUTPUT_PORT"
+  val FunnelType = "FUNNEL"
+}
