@@ -113,7 +113,15 @@ case class Connectable(@BeanProperty var id: String,
   def this() = this("", "", "")
 }
 
+case class ConnectionCreate(@BeanProperty var flowInstanceId: String,
+                            @BeanProperty var source: Connectable,
+                            @BeanProperty var destination: Connectable,
+                            @BeanProperty var sourceRelationships: Set[String]) {
+  def this() = this("", Connectable("", "", ""), Connectable("", "", ""), Set())
+}
+
 case class Connection(@BeanProperty var id: String,
+                      @BeanProperty var flowInstanceId: String,
                       @BeanProperty var name: String,
                       @BeanProperty var version: Long,
                       @BeanProperty var source: Connectable,
@@ -123,20 +131,11 @@ case class Connection(@BeanProperty var id: String,
                       @BeanProperty var backPressureDataSize: String,
                       @BeanProperty var backPressureObjectThreshold: Long,
                       @BeanProperty var prioritizers: List[String]) {
-  def this() = this("", "", -1, Connectable("", "", ""), Connectable("", "", ""), Set(), "", "", -1, Nil)
+  def this() = this("", "", "", 0, Connectable("", "", ""), Connectable("", "", ""), Set(), "", "", -1, Nil)
 }
 
 trait ConnectionApiService {
-  def create(flowInstanceId: String,
-             sourceConnectable: Connectable,
-             destinationConnectable: Connectable,
-             sourceRelationships: Set[String],
-             name: Option[String],
-             flowFileExpiration: Option[String],
-             backPressureDataSize: Option[String],
-             backPressureObjectThreshold: Option[Long],
-             prioritizers: Option[List[String]],
-             clientId: String): Future[Connection]
+  def create(connectionCreate: ConnectionCreate, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
 }
