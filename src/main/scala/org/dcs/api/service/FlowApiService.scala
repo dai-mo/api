@@ -113,7 +113,6 @@ case class Connectable(@BeanProperty var id: String,
   def this() = this("", "", "")
 }
 
-@JsonInclude(Include.NON_NULL)
 case class Connection(@BeanProperty var id: String,
                       @BeanProperty var name: String,
                       @BeanProperty var version: Long,
@@ -139,6 +138,7 @@ trait ConnectionApiService {
              prioritizers: Option[List[String]],
              clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
+  def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
 }
 
 // --- Connection Models/ API End ---
