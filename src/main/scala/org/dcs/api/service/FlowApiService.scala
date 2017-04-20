@@ -3,7 +3,9 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
-import org.dcs.api.processor.RemoteProcessor
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
+import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
 
 import scala.beans.BeanProperty
 import scala.concurrent.Future
@@ -13,17 +15,6 @@ import scala.concurrent.Future
   */
 
 // --- Flow Models/ API Start ---
-
-case class ConnectionPort(@BeanProperty var id: String,
-                          @BeanProperty var `type`: String) {
-  def this() = this("", "")
-}
-
-case class Connection(@BeanProperty var id: String,
-                      @BeanProperty var source: ConnectionPort,
-                      @BeanProperty var destination: ConnectionPort) {
-  def this() = this("", ConnectionPort("", ""), ConnectionPort("", ""))
-}
 
 case class FlowInstance(@BeanProperty var id: String,
                         @BeanProperty var name: String,
@@ -46,13 +37,14 @@ case class FlowTemplate(@BeanProperty var id: String,
 
 
 trait FlowApiService {
-  def templates(clientId: String): Future[List[FlowTemplate]]
-  def instantiate(flowTemplateId: String, userId: String, authToken: String): Future[FlowInstance]
-  def instance(flowInstanceId: String, userId: String, authToken: String): Future[FlowInstance]
-  def instances(userId: String, authToken: String): Future[List[FlowInstance]]
-  def start(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
-  def stop(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
-  def remove(flowInstanceId: String, userId: String, authToken: String): Future[Boolean]
+  def templates(): Future[List[FlowTemplate]]
+  def create(flowName: String, clientId: String): Future[FlowInstance]
+  def instantiate(flowTemplateId: String, clientId: String): Future[FlowInstance]
+  def instance(flowInstanceId: String): Future[FlowInstance]
+  def instances(): Future[List[FlowInstance]]
+  def start(flowInstanceId: String): Future[FlowInstance]
+  def stop(flowInstanceId: String): Future[FlowInstance]
+  def remove(flowInstanceId: String, version: Long, clientId: String): Future[Boolean]
 }
 
 // --- Flow Models/ API End ---
@@ -60,13 +52,28 @@ trait FlowApiService {
 
 // --- Processor Models/ API Start ---
 
+case class ProcessorConfig(@BeanProperty var autoTerminatedRelationships: Set[String],
+                           @BeanProperty var bulletinLevel: String,
+                           @BeanProperty var comments: String,
+                           @BeanProperty var concurrentlySchedulableTaskCount: Int,
+                           @BeanProperty var penaltyDuration: String,
+                           @BeanProperty var schedulingPeriod: String,
+                           @BeanProperty var schedulingStrategy: String,
+                           @BeanProperty var yieldDuration: String) {
+  def this() = this(Set(), "", "", 1, "", "", "", "")
+}
+
 case class ProcessorInstance(@BeanProperty var id: String,
+                             @BeanProperty var name: String,
                              @BeanProperty var `type`: String,
                              @BeanProperty var processorType: String,
                              @BeanProperty var status: String,
                              @BeanProperty var version: Long,
-                             @BeanProperty var properties: Map[String, String]) {
-  def this() = this("", "", "", "", 0.0.toLong, Map())
+                             @BeanProperty var properties: Map[String, String],
+                             @BeanProperty var propertyDefinitions: List[RemoteProperty],
+                             @BeanProperty var validationErrors: List[String],
+                             @BeanProperty var config: ProcessorConfig) {
+  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Nil, new ProcessorConfig())
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -82,18 +89,59 @@ case class ProcessorServiceDefinition(@BeanProperty var processorServiceClassNam
 }
 
 trait ProcessorApiService {
-  def types(userId: String): Future[List[ProcessorType]]
-  def typesSearchTags(str:String, userId: String): Future[List[ProcessorType]]
-  def create(name: String, ptype: String, clientToken: String): Future[ProcessorInstance]
-  def instance(processorId: String, userId: String): Future[ProcessorInstance]
-  def start(processorId: String, userId: String): Future[ProcessorInstance]
-  def stop(processorId: String, userId: String): Future[ProcessorInstance]
-  def remove(processorId: String, userId: String): Future[Boolean]
+  def types(): Future[List[ProcessorType]]
+  def typesSearchTags(str:String): Future[List[ProcessorType]]
+  def create(processorServiceDefinition: ProcessorServiceDefinition,
+             processGroupId: String,
+             clientId: String): Future[ProcessorInstance]
+  def update(processorInstance: ProcessorInstance, clientId: String): Future[ProcessorInstance]
+  def instance(processorId: String): Future[ProcessorInstance]
+  def start(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
+  def stop(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
+  def remove(processorId: String, version: Long, clientId: String): Future[Boolean]
 }
 
 
 
 // --- Processor Models/ API End ---
+
+// --- Connection Models/ API Start ---
+
+case class Connectable(@BeanProperty var id: String,
+                       @BeanProperty var componentType: String,
+                       @BeanProperty var flowInstanceId: String) {
+  def this() = this("", "", "")
+}
+
+case class Connection(@BeanProperty var id: String,
+                      @BeanProperty var name: String,
+                      @BeanProperty var version: Long,
+                      @BeanProperty var source: Connectable,
+                      @BeanProperty var destination: Connectable,
+                      @BeanProperty var sourceRelationships: Set[String],
+                      @BeanProperty var flowFileExpiration: String,
+                      @BeanProperty var backPressureDataSize: String,
+                      @BeanProperty var backPressureObjectThreshold: Long,
+                      @BeanProperty var prioritizers: List[String]) {
+  def this() = this("", "", -1, Connectable("", "", ""), Connectable("", "", ""), Set(), "", "", -1, Nil)
+}
+
+trait ConnectionApiService {
+  def create(flowInstanceId: String,
+             sourceConnectable: Connectable,
+             destinationConnectable: Connectable,
+             sourceRelationships: Set[String],
+             name: Option[String],
+             flowFileExpiration: Option[String],
+             backPressureDataSize: Option[String],
+             backPressureObjectThreshold: Option[Long],
+             prioritizers: Option[List[String]],
+             clientId: String): Future[Connection]
+  def update(connection: Connection, clientId: String): Future[Connection]
+  def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
+}
+
+// --- Connection Models/ API End ---
 
 
 // --- Provenance Models/ API Start ---
@@ -122,3 +170,12 @@ trait IFlowDataService {
 }
 
 // --- Flow Data Models / API end ---
+
+object FlowComponent {
+  val ProcessorType = "PROCESSOR"
+  val RemoteInputPortType = "REMOTE_INPUT_PORT"
+  val RemoteOutputPortType = "REMOTE_OUTPUT_PORT"
+  val InputPortType = "INPUT_PORT"
+  val OutputPortType = "OUTPUT_PORT"
+  val FunnelType = "FUNNEL"
+}
