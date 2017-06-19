@@ -3,8 +3,6 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
 
 import scala.beans.BeanProperty
