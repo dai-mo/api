@@ -3,13 +3,24 @@ package org.dcs.api.processor
 import java.util
 import java.util.{List => JavaList, Map => JavaMap}
 
+import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
+import org.dcs.commons.SchemaField
 import org.dcs.commons.serde.JsonSerializerImplicits._
 
 import scala.collection.JavaConverters._
 /**
   * Created by cmathew on 10.03.17.
   */
+object FieldsToMap {
+
+  def schemaCheck(schema: Schema, fieldsToMap: String): Boolean = {
+    fieldsToMap.toMapOf[String].foreach(ftm =>
+      if(ftm._2.nonEmpty && !SchemaField.validatePath(schema, ftm._2))
+        throw new IllegalStateException("Required field " + ftm._2 + "does not exist in schema"))
+    true
+  }
+}
 trait FieldsToMap extends RemoteProcessor {
 
   def fields: List[String]
@@ -18,7 +29,7 @@ trait FieldsToMap extends RemoteProcessor {
     val props = new util.ArrayList(super.properties())
 
     if(fields.nonEmpty)
-      props.add(CoreProperties.fieldsToMapProperty(fields.map(f => (f, "$." + f)).toMap.toJson))
+      props.add(CoreProperties.fieldsToMapProperty(fields.map(f => (f, "")).toMap.toJson))
     props
   }
 

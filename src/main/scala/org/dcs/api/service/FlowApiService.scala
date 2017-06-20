@@ -3,9 +3,8 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
+import org.dcs.commons.SchemaAction
 
 import scala.beans.BeanProperty
 import scala.concurrent.Future
@@ -95,6 +94,10 @@ trait ProcessorApiService {
              processGroupId: String,
              clientId: String): Future[ProcessorInstance]
   def update(processorInstance: ProcessorInstance, clientId: String): Future[ProcessorInstance]
+  def updateSchema(flowInstanceId: String,
+                   processorInstanceId: String,
+                   schemaActions: List[SchemaAction],
+                   clientId: String): Future[List[ProcessorInstance]]
   def instance(processorId: String): Future[ProcessorInstance]
   def start(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def stop(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
