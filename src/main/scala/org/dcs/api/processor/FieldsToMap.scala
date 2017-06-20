@@ -16,7 +16,7 @@ object FieldsToMap {
 
   def schemaCheck(schema: Schema, fieldsToMap: String): Boolean = {
     fieldsToMap.toMapOf[String].foreach(ftm =>
-      if(!SchemaField.validatePath(schema, ftm._2))
+      if(ftm._2.nonEmpty && !SchemaField.validatePath(schema, ftm._2))
         throw new IllegalStateException("Required field " + ftm._2 + "does not exist in schema"))
     true
   }

@@ -30,7 +30,7 @@ object FieldActions {
 
   def schemaCheck(schema: Schema, fieldActions: String): Boolean = {
     fieldActions.asList[Action].foreach(fa =>
-      if(!SchemaField.validatePath(schema, fa.jsonPath))
+      if(fa.jsonPath.nonEmpty && !SchemaField.validatePath(schema, fa.jsonPath))
         throw new IllegalStateException("Required field " + fa.jsonPath + "does not exist in schema"))
     true
   }

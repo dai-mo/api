@@ -51,8 +51,6 @@ class FieldActionsProcessorSpec  extends ApiUnitWordSpec {
       }
     }
 
-
-
     "return valid response for provided field actions" in {
       assertResult(TestFieldActionsProcessor.person) {
         fieldActionsprocessor.
