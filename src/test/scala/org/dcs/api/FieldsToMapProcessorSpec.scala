@@ -20,9 +20,9 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
   "Fields To Map Processor" should {
     val fieldsToMapProcessor = new TestFieldsToMapProcessor
 
-    val defaultFieldsToMapPropertyValue = Map(FirstNameKey -> ("$." + FirstNameKey),
-      MiddleNameKey -> ("$." + MiddleNameKey),
-      LastNameKey -> ("$." + LastNameKey)).toJson
+    val defaultFieldsToMapPropertyValue = Map(FirstNameKey -> "",
+      MiddleNameKey -> "",
+      LastNameKey -> "").toJson
 
     val fieldsToMapPropertyValue = Map(FirstNameKey -> ("$.name." + FirstNameSchemaKey),
       MiddleNameKey -> ("$.name." + MiddleNameSchemaKey),
@@ -40,7 +40,10 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
       assert(FieldsToMap.schemaCheck(schema.get, fieldsToMapPropertyValue))
     }
 
+
     "return correct default value for fields to map property" in {
+      println("exp : " + defaultFieldsToMapPropertyValue)
+      println("act : " + fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey).get.defaultValue)
       assertResult(defaultFieldsToMapPropertyValue) {
         fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey).get.defaultValue
       }
