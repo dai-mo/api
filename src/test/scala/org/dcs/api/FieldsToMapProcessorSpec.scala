@@ -29,12 +29,14 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
       LastNameKey -> ("$.name." + LastNameSchemaKey)).toJson
 
     "validate fields to map with schema" in {
-      assertThrows[IllegalStateException] {
-        FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue)
-      }
+      assert(FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue))
+
+      val invalidFieldsToMapPropertyValue = Map(FirstNameKey -> "",
+        MiddleNameKey -> ("$.somename." + MiddleNameSchemaKey),
+        LastNameKey -> "").toJson
 
       assertThrows[IllegalStateException] {
-        FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue + (MiddleNameKey -> ("$.name." + MiddleNameSchemaKey)))
+        FieldsToMap.schemaCheck(schema.get, invalidFieldsToMapPropertyValue)
       }
 
       assert(FieldsToMap.schemaCheck(schema.get, fieldsToMapPropertyValue))

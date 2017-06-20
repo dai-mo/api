@@ -34,12 +34,10 @@ class FieldActionsProcessorSpec  extends ApiUnitWordSpec {
     val validFieldActionsPropertyValue = List(Action("$.name.first", ContainsCmd, "Ob")).toJson
 
     "validate field actions with schema" in {
-      assertThrows[IllegalStateException] {
-        FieldActions.schemaCheck(schema.get, defaultFieldActionsPropertyValue)
-      }
+      assert(FieldActions.schemaCheck(schema.get, defaultFieldActionsPropertyValue))
 
       assertThrows[IllegalStateException] {
-        FieldActions.schemaCheck(schema.get, List(Action("$.name.first", ContainsCmd, "Ob"), Action("", StartsWithCmd, "")).toJson)
+        FieldActions.schemaCheck(schema.get, List(Action("$.somename.first", ContainsCmd, "Ob"), Action("", StartsWithCmd, "")).toJson)
       }
 
       assert(FieldActions.schemaCheck(schema.get, validFieldActionsPropertyValue))
