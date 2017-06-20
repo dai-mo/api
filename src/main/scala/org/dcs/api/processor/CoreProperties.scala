@@ -83,6 +83,13 @@ object CoreProperties {
       isDynamic = false,
       PropertyLevel.Internal)
 
+  def schemaCheck(schema: Schema, properties: Map[String, String]): Boolean = {
+    properties.map({
+      case (CoreProperties.FieldsToMapKey, value) => FieldsToMap.schemaCheck(schema, value)
+      case (CoreProperties.FieldActionsKey, value) => FieldActions.schemaCheck(schema, value)
+      case _ => true
+    }).forall(identity)
+  }
 }
 
 class CoreProperties(properties: Map[String, String]) {

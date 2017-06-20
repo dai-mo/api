@@ -31,13 +31,27 @@ class FieldActionsProcessorSpec  extends ApiUnitWordSpec {
 
     val defaultFieldActionsPropertyValue = List(Action("", ContainsCmd, ""), Action("", StartsWithCmd, "")).toJson
 
+    val validFieldActionsPropertyValue = List(Action("$.name.first", ContainsCmd, "Ob")).toJson
+
+    "validate field actions with schema" in {
+      assertThrows[IllegalStateException] {
+        FieldActions.schemaCheck(schema.get, defaultFieldActionsPropertyValue)
+      }
+
+      assertThrows[IllegalStateException] {
+        FieldActions.schemaCheck(schema.get, List(Action("$.name.first", ContainsCmd, "Ob"), Action("", StartsWithCmd, "")).toJson)
+      }
+
+      assert(FieldActions.schemaCheck(schema.get, validFieldActionsPropertyValue))
+    }
+
     "return correct default value for fields actions property" in {
       assertResult(defaultFieldActionsPropertyValue) {
         fieldActionsprocessor.properties().asScala.find(p => p.name == CoreProperties.FieldActionsKey).get.defaultValue
       }
     }
 
-    val validFieldActionsPropertyValue = List(Action("$.name.first", ContainsCmd, "Ob")).toJson
+
 
     "return valid response for provided field actions" in {
       assertResult(TestFieldActionsProcessor.person) {

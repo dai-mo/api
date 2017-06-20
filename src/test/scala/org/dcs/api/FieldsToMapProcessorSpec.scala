@@ -28,6 +28,18 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
       MiddleNameKey -> ("$.name." + MiddleNameSchemaKey),
       LastNameKey -> ("$.name." + LastNameSchemaKey)).toJson
 
+    "validate fields to map with schema" in {
+      assertThrows[IllegalStateException] {
+        FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue)
+      }
+
+      assertThrows[IllegalStateException] {
+        FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue + (MiddleNameKey -> ("$.name." + MiddleNameSchemaKey)))
+      }
+
+      assert(FieldsToMap.schemaCheck(schema.get, fieldsToMapPropertyValue))
+    }
+
     "return correct default value for fields to map property" in {
       assertResult(defaultFieldsToMapPropertyValue) {
         fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey).get.defaultValue

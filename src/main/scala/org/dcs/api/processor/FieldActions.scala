@@ -3,7 +3,9 @@ package org.dcs.api.processor
 import java.util
 import java.util.{List => JavaList, Map => JavaMap}
 
+import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
+import org.dcs.commons.SchemaField
 
 import scala.collection.JavaConverters._
 import org.dcs.commons.serde.JsonSerializerImplicits._
@@ -21,6 +23,16 @@ case class Action(@BeanProperty var jsonPath: String,
 
   def fromJsonPath(record: Option[GenericRecord]): Option[GenericRecordObject] = {
     RemoteProcessor.fromJsonPath(jsonPath, record)
+  }
+}
+
+object FieldActions {
+
+  def schemaCheck(schema: Schema, fieldActions: String): Boolean = {
+    fieldActions.asList[Action].foreach(fa =>
+      if(!SchemaField.validatePath(schema, fa.jsonPath))
+        throw new IllegalStateException("Required field " + fa.jsonPath + "does not exist in schema"))
+    true
   }
 }
 
