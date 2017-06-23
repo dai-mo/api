@@ -1,12 +1,10 @@
 package org.dcs.api.processor
 
-import java.lang.NullPointerException
 import java.nio.ByteBuffer
 import java.util.{Map => JavaMap}
 
 import com.google.common.net.MediaType
 import org.apache.avro.Schema
-import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.{GenericFixed, GenericRecord}
 import org.dcs.commons.error.{ErrorConstants, ErrorResponse}
 import org.dcs.commons.serde.AvroImplicits._
@@ -40,6 +38,9 @@ object RemoteProcessor {
     schema
   }
 
+  def resolveReadSchema(properties: JavaMap[String, String]): Option[Schema] = {
+    resolveReadSchema(CoreProperties(properties.asScala.toMap))
+  }
 
   def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): Option[Schema] = {
     var schema = coreProperties.writeSchema
@@ -58,7 +59,12 @@ object RemoteProcessor {
       schema
   }
 
-  def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
+  def resolveWriteSchema(properties: JavaMap[String, String], schemaId: Option[String]): Option[Schema] = {
+    resolveWriteSchema(CoreProperties(properties.asScala.toMap), schemaId)
+  }
+
+
+    def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
     fromJsonPath(path.split("\\.").toList, currentRecord)
   }
 

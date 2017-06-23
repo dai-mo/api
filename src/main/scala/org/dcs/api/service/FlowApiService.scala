@@ -3,6 +3,8 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
 import org.dcs.commons.SchemaAction
 
@@ -51,15 +53,14 @@ trait FlowApiService {
 
 // --- Processor Models/ API Start ---
 
-case class ProcessorConfig(@BeanProperty var autoTerminatedRelationships: Set[String],
-                           @BeanProperty var bulletinLevel: String,
+case class ProcessorConfig(@BeanProperty var bulletinLevel: String,
                            @BeanProperty var comments: String,
                            @BeanProperty var concurrentlySchedulableTaskCount: Int,
                            @BeanProperty var penaltyDuration: String,
                            @BeanProperty var schedulingPeriod: String,
                            @BeanProperty var schedulingStrategy: String,
                            @BeanProperty var yieldDuration: String) {
-  def this() = this(Set(), "", "", 1, "", "", "", "")
+  def this() = this("", "", 1, "", "", "", "")
 }
 
 case class ProcessorInstance(@BeanProperty var id: String,
