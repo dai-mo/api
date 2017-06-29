@@ -20,20 +20,20 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
   "Fields To Map Processor" should {
     val fieldsToMapProcessor = new TestFieldsToMapProcessor
 
-    val defaultFieldsToMapPropertyValue = Map(FirstNameKey -> "",
-      MiddleNameKey -> "",
-      LastNameKey -> "").toJson
+    val defaultFieldsToMapPropertyValue = List(ProcessorField(FirstNameKey, PropertyType.String),
+      ProcessorField(MiddleNameKey, PropertyType.String),
+      ProcessorField(LastNameKey, PropertyType.String)).toJson
 
-    val fieldsToMapPropertyValue = Map(FirstNameKey -> ("$.name." + FirstNameSchemaKey),
-      MiddleNameKey -> ("$.name." + MiddleNameSchemaKey),
-      LastNameKey -> ("$.name." + LastNameSchemaKey)).toJson
+    val fieldsToMapPropertyValue = List(ProcessorField(FirstNameKey, PropertyType.String, "$.name." + FirstNameSchemaKey),
+      ProcessorField(MiddleNameKey, PropertyType.String, "$.name." + MiddleNameSchemaKey),
+      ProcessorField(LastNameKey, PropertyType.String, "$.name." + LastNameSchemaKey)).toJson
 
     "validate fields to map with schema" in {
       assert(FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue))
 
-      val invalidFieldsToMapPropertyValue = Map(FirstNameKey -> "",
-        MiddleNameKey -> ("$.somename." + MiddleNameSchemaKey),
-        LastNameKey -> "").toJson
+      val invalidFieldsToMapPropertyValue = List(ProcessorField(FirstNameKey, PropertyType.String),
+        ProcessorField(MiddleNameKey, PropertyType.String,"$.somename." + MiddleNameSchemaKey),
+        ProcessorField(LastNameKey, PropertyType.String)).toJson
 
       assertThrows[IllegalStateException] {
         FieldsToMap.schemaCheck(schema.get, invalidFieldsToMapPropertyValue)
@@ -44,10 +44,9 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
 
 
     "return correct default value for fields to map property" in {
-      println("exp : " + defaultFieldsToMapPropertyValue)
-      println("act : " + fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey).get.defaultValue)
-      assertResult(defaultFieldsToMapPropertyValue) {
-        fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey).get.defaultValue
+      assertResult(defaultFieldsToMapPropertyValue.asList[ProcessorField].toSet) {
+        fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey)
+          .get.defaultValue.asList[ProcessorField].toSet
       }
     }
 
@@ -130,7 +129,9 @@ object TestFieldsToMapProcessor {
 class TestFieldsToMapProcessor extends Worker with FieldsToMap {
   import TestFieldsToMapProcessor._
 
-  override def fields: List[String] = List(FirstNameKey, MiddleNameKey, LastNameKey)
+  override def fields: Set[ProcessorField] = Set(ProcessorField(FirstNameKey, PropertyType.String),
+    ProcessorField(MiddleNameKey, PropertyType.String),
+    ProcessorField(LastNameKey, PropertyType.String))
 
   override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
