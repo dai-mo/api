@@ -16,10 +16,11 @@ import scala.beans.BeanProperty
   * Created by cmathew on 24.03.17.
   */
 
-case class Action(@BeanProperty var jsonPath: String,
-                  @BeanProperty var cmd: String,
-                  @BeanProperty var args: String) {
-  def this() = this("", "", "")
+case class Action(@BeanProperty var name: String,
+                  @BeanProperty var fieldType: String,
+                  @BeanProperty var jsonPath: String = "",
+                  @BeanProperty var args: String = "") {
+  def this() = this("", "", PropertyType.String, "")
 
   def fromJsonPath(record: Option[GenericRecord]): Option[GenericRecordObject] = {
     RemoteProcessor.fromJsonPath(jsonPath, record)
@@ -31,20 +32,20 @@ object FieldActions {
   def schemaCheck(schema: Schema, fieldActions: String): Boolean = {
     fieldActions.asList[Action].foreach(fa =>
       if(fa.jsonPath.nonEmpty && !SchemaField.validatePath(schema, fa.jsonPath))
-        throw new IllegalStateException("Required field " + fa.jsonPath + "does not exist in schema"))
+        throw new IllegalStateException("Required field " + fa.jsonPath + " does not exist in schema"))
     true
   }
 }
 
 trait FieldActions extends RemoteProcessor {
 
-  def cmds: List[String]
+  def cmds: Set[Action]
 
   override def properties(): JavaList[RemoteProperty] = {
     val props = new util.ArrayList(super.properties())
 
     if(cmds.nonEmpty)
-      props.add(CoreProperties.fieldActionsProperty(cmds.map(c => Action("", c, "")).toJson))
+      props.add(CoreProperties.fieldActionsProperty(cmds))
     props
   }
 

@@ -3,6 +3,8 @@ package org.dcs.api.processor
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Parser
 
+import scala.collection.JavaConverters._
+import org.dcs.commons.serde.JsonSerializerImplicits._
 
 /**
   * Created by cmathew on 09.03.17.
@@ -20,8 +22,21 @@ object CoreProperties {
 
   val SchemaNamespace = "org.dcs.processor"
 
-  def remoteProperty(key: String, description: String, dValue: String, isRequired: Boolean, isDynamic: Boolean, pLevel: Int): RemoteProperty = {
-    RemoteProperty(key, key, description, defaultValue = dValue, required = isRequired, dynamic = isDynamic, level = pLevel)
+  def remoteProperty(key: String,
+                     description: String,
+                     dValue: String,
+                     isRequired: Boolean,
+                     isDynamic: Boolean,
+                     pLevel: Int,
+                     values: Set[String] = Set()): RemoteProperty = {
+    RemoteProperty(key,
+      key,
+      description,
+      defaultValue = dValue,
+      required = isRequired,
+      dynamic = isDynamic,
+      level = pLevel,
+      possibleValues = values.map(v => PossibleValue(v, v, v)).asJava)
   }
 
   def apply(properties: Map[String, String]): CoreProperties =
@@ -59,18 +74,18 @@ object CoreProperties {
       isDynamic = true,
       PropertyLevel.Internal)
 
-  def fieldsToMapProperty(defaultValue: String = null): RemoteProperty =
+  def fieldsToMapProperty(fields: Set[ProcessorField]): RemoteProperty =
     remoteProperty(FieldsToMapKey,
       "Field <> JsonPath Mappings for fields required by this processor [Level" + PropertyLevel.Internal + "]",
-      defaultValue,
+      fields.toJson,
       isRequired = false,
       isDynamic = false,
       PropertyLevel.Internal)
 
-  def fieldActionsProperty(defaultValue: String = null): RemoteProperty =
+  def fieldActionsProperty(actions: Set[Action]): RemoteProperty =
     remoteProperty(FieldActionsKey,
       "A list of actions mapped to json paths which are executed by the processor [Level" + PropertyLevel.Internal + "]",
-      defaultValue,
+      actions.toJson,
       isRequired = false,
       isDynamic = false,
       PropertyLevel.Internal)

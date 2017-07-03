@@ -29,23 +29,26 @@ class FieldActionsProcessorSpec  extends ApiUnitWordSpec {
       }
     val input = person.serToBytes(personSchema)
 
-    val defaultFieldActionsPropertyValue = List(Action("", ContainsCmd, ""), Action("", StartsWithCmd, "")).toJson
+    val defaultFieldActionsPropertyValue = List(Action(ContainsCmd, PropertyType.String),
+      Action(StartsWithCmd, PropertyType.String)).toJson
 
-    val validFieldActionsPropertyValue = List(Action("$.name.first", ContainsCmd, "Ob")).toJson
+    val validFieldActionsPropertyValue = List(Action(ContainsCmd, PropertyType.String, "$.name.first", "Ob")).toJson
 
     "validate field actions with schema" in {
       assert(FieldActions.schemaCheck(schema.get, defaultFieldActionsPropertyValue))
 
       assertThrows[IllegalStateException] {
-        FieldActions.schemaCheck(schema.get, List(Action("$.somename.first", ContainsCmd, "Ob"), Action("", StartsWithCmd, "")).toJson)
+        FieldActions.schemaCheck(schema.get, List(Action(ContainsCmd, PropertyType.String, "$.somename.first",  "Ob"),
+          Action(StartsWithCmd, PropertyType.String)).toJson)
       }
 
       assert(FieldActions.schemaCheck(schema.get, validFieldActionsPropertyValue))
     }
 
     "return correct default value for fields actions property" in {
-      assertResult(defaultFieldActionsPropertyValue) {
-        fieldActionsprocessor.properties().asScala.find(p => p.name == CoreProperties.FieldActionsKey).get.defaultValue
+      assertResult(defaultFieldActionsPropertyValue.asList[Action].toSet) {
+        fieldActionsprocessor.properties().asScala.find(p => p.name == CoreProperties.FieldActionsKey)
+          .get.defaultValue.asList[Action].toSet
       }
     }
 
@@ -98,10 +101,10 @@ object TestFieldActionsProcessor {
 class TestFieldActionsProcessor extends Worker with FieldActions {
   import TestFieldActionsProcessor._
 
-  override def cmds: List[String] = List("contains", "starts with")
+  override def cmds: Set[Action] = Set(Action("contains", PropertyType.String), Action("starts with", PropertyType.String))
 
   override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
-    val isValid: Boolean = actions(properties).map(a => a.cmd match {
+    val isValid: Boolean = actions(properties).map(a => a.name match {
       case ContainsCmd => a.fromJsonPath(record).value.asString.exists(s => s.contains(a.args))
       case StartsWithCmd => a.fromJsonPath(record).value.asString.exists(s => s.contains(a.args))
       case _ => false
