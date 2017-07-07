@@ -95,6 +95,7 @@ trait ProcessorApiService {
              processGroupId: String,
              clientId: String): Future[ProcessorInstance]
   def update(processorInstance: ProcessorInstance, clientId: String): Future[ProcessorInstance]
+  def updateProperties(processorId: String, properties: Map[String, String], clientId : String): Future[ProcessorInstance]
   def updateSchema(flowInstanceId: String,
                    processorInstanceId: String,
                    schemaActions: List[SchemaAction],
