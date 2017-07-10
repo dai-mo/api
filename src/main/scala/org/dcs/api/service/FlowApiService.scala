@@ -5,7 +5,7 @@ import java.util.Date
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-import org.dcs.api.processor.{RemoteProcessor, RemoteProperty}
+import org.dcs.api.processor._
 import org.dcs.commons.SchemaAction
 
 import scala.beans.BeanProperty
@@ -87,6 +87,10 @@ case class ProcessorServiceDefinition(@BeanProperty var processorServiceClassNam
                                       @BeanProperty var stateful: Boolean) {
   def this() = this("", RemoteProcessor.WorkerProcessorType, false)
 }
+
+case class ProcessorDetails(@BeanProperty var metadata: MetaData,
+                            @BeanProperty var configuration: Configuration,
+                            @BeanProperty var relationships: util.Set[RemoteRelationship])
 
 trait ProcessorApiService {
   def types(): Future[List[ProcessorType]]
