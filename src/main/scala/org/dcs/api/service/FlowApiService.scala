@@ -90,7 +90,9 @@ case class ProcessorServiceDefinition(@BeanProperty var processorServiceClassNam
 
 case class ProcessorDetails(@BeanProperty var metadata: MetaData,
                             @BeanProperty var configuration: Configuration,
-                            @BeanProperty var relationships: util.Set[RemoteRelationship])
+                            @BeanProperty var relationships: util.Set[RemoteRelationship]) {
+  def this() = this(new MetaData(), new Configuration(), new util.HashSet[RemoteRelationship]())
+}
 
 trait ProcessorApiService {
   def types(): Future[List[ProcessorType]]

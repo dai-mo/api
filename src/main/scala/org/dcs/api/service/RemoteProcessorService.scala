@@ -41,6 +41,9 @@ trait RemoteProcessorService extends RemoteProcessor
   override def metadata():MetaData =
     getDef(instance()).metadata()
 
+  override def details(): ProcessorDetails =
+    getDef(instance()).details()
+
   override def schemaId: String =
     instance().schemaId
 }

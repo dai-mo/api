@@ -6,6 +6,7 @@ import java.util.{Map => JavaMap}
 import com.google.common.net.MediaType
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericFixed, GenericRecord}
+import org.dcs.api.service.ProcessorDetails
 import org.dcs.commons.error.{ErrorConstants, ErrorResponse}
 import org.dcs.commons.serde.AvroImplicits._
 import org.dcs.commons.serde.AvroSchemaStore
@@ -232,7 +233,10 @@ trait RemoteProcessor extends BaseProcessor
 trait ProcessorDefinition extends HasProperties
   with HasRelationships
   with HasConfiguration
-  with HasMetaData
+  with HasMetaData {
+
+  def details(): ProcessorDetails = ProcessorDetails(this.metadata(), this.configuration, this.relationships())
+}
 
 
 
