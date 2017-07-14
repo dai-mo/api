@@ -85,7 +85,7 @@ trait RemoteProcessor extends BaseProcessor
 
   def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
     def resultError(t: Throwable) = Array(RelationshipType.Failure.id.getBytes,
-      ErrorConstants.DCS306.withErrorMessage(Option(t.getMessage).getOrElse(t.getClass.getName)).
+      ErrorConstants.DCS306.withDescription(Option(t.getMessage).getOrElse(t.getClass.getName)).
         avroRecord().
         serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
 
