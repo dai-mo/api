@@ -1,10 +1,13 @@
 package org.dcs.api.processor
 
+
 import org.apache.avro.Schema
-import org.apache.avro.Schema.Parser
+import org.apache.avro.Schema.{Parser, Type}
+import org.dcs.commons.error._
+import org.dcs.commons.serde.AvroSchemaStore
+import org.dcs.commons.serde.JsonSerializerImplicits._
 
 import scala.collection.JavaConverters._
-import org.dcs.commons.serde.JsonSerializerImplicits._
 
 /**
   * Created by cmathew on 09.03.17.
@@ -19,6 +22,7 @@ object CoreProperties {
   val FieldActionsKey = "_FIELDS_ACTIONS"
 
   val ProcessorTypeKey = "_PROCESSOR_TYPE"
+  val ProcessorClassKey = "_PROCESSOR_CLASS"
 
   val SchemaNamespace = "org.dcs.processor"
 
@@ -74,11 +78,11 @@ object CoreProperties {
       isDynamic = true,
       PropertyLevel.Internal)
 
-  def fieldsToMapProperty(fields: Set[ProcessorField]): RemoteProperty =
+  def fieldsToMapProperty(fields: Set[ProcessorSchemaField]): RemoteProperty =
     remoteProperty(FieldsToMapKey,
       "Field <> JsonPath Mappings for fields required by this processor [Level" + PropertyLevel.Internal + "]",
       fields.toJson,
-      isRequired = false,
+      isRequired = true,
       isDynamic = false,
       PropertyLevel.Internal)
 
@@ -86,7 +90,7 @@ object CoreProperties {
     remoteProperty(FieldActionsKey,
       "A list of actions mapped to json paths which are executed by the processor [Level" + PropertyLevel.Internal + "]",
       actions.toJson,
-      isRequired = false,
+      isRequired = true,
       isDynamic = false,
       PropertyLevel.Internal)
 
@@ -98,16 +102,10 @@ object CoreProperties {
       isDynamic = false,
       PropertyLevel.Internal)
 
-  def schemaCheck(schema: Schema, properties: Map[String, String]): Boolean = {
-    properties.map({
-      case (CoreProperties.FieldsToMapKey, value) => FieldsToMap.schemaCheck(schema, value)
-      case (CoreProperties.FieldActionsKey, value) => FieldActions.schemaCheck(schema, value)
-      case _ => true
-    }).forall(identity)
-  }
 }
 
 class CoreProperties(properties: Map[String, String]) {
+
   import CoreProperties._
 
   val readSchemaId: Option[String] = properties.get(ReadSchemaIdKey).flatMap(schemaId => Option(if(schemaId == null || schemaId.isEmpty) null else schemaId))
@@ -118,4 +116,27 @@ class CoreProperties(properties: Map[String, String]) {
   val readSchema: Option[Schema] = properties.get(ReadSchemaKey).flatMap(schema => Option(if(schema == null || schema.isEmpty) null else (new Parser).parse(schema)))
   val writeSchema: Option[Schema] = properties.get(WriteSchemaKey).flatMap(schema => Option(if(schema == null || schema.isEmpty) null else (new Parser).parse(schema)))
 
+  def resolveReadSchema(): Option[Schema] = {
+    var schema = readSchema
+
+    if (schema.isEmpty) {
+      schema = readSchemaId.flatMap(AvroSchemaStore.get)
+    }
+
+    schema
+  }
+
+
+  def resolveWriteSchema(): Option[Schema] = {
+    var schema = writeSchema
+
+    if(schema.isEmpty) {
+      schema =  writeSchemaId.flatMap(AvroSchemaStore.get)
+    }
+
+    if(schema.isEmpty)
+      resolveReadSchema()
+    else
+      schema
+  }
 }

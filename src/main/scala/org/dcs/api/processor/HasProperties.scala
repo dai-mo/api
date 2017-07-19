@@ -5,6 +5,7 @@ import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import CoreProperties._
+import org.apache.avro.Schema
 
 /**
   * Created by cmathew on 29/08/16.
@@ -54,10 +55,22 @@ case class PossibleValue(@BeanProperty var value: String,
 }
 
 object PropertyType {
-  val String = "STRING"
-  val Number = "NUMBER"
-  val Boolean = "BOOLEAN"
+  val Record = Schema.Type.RECORD.getName
+  val Enum = Schema.Type.ENUM.getName
+  val Array = Schema.Type.ARRAY.getName
+  val Map = Schema.Type.MAP.getName
+  val Union = Schema.Type.UNION.getName
+  val Fixed = Schema.Type.FIXED.getName
+  val String = Schema.Type.STRING.getName
+  val Bytes = Schema.Type.BYTES.getName
+  val Int = Schema.Type.INT.getName
+  val Long = Schema.Type.LONG.getName
+  val Float = Schema.Type.FLOAT.getName
+  val Double = Schema.Type.DOUBLE.getName
+  val Boolean = Schema.Type.BOOLEAN.getName
+  val Null = Schema.Type.NULL.getName
   val List = "LIST"
+  val Number = "NUMBER"
 }
 
 object PropertyLevel {

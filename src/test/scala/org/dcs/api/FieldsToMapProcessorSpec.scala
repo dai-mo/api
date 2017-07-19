@@ -20,39 +20,39 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
   "Fields To Map Processor" should {
     val fieldsToMapProcessor = new TestFieldsToMapProcessor
 
-    val defaultFieldsToMapPropertyValue = List(ProcessorField(FirstNameKey, PropertyType.String),
-      ProcessorField(MiddleNameKey, PropertyType.String),
-      ProcessorField(LastNameKey, PropertyType.String)).toJson
+    val defaultFieldsToMapPropertyMap = Map(CoreProperties.FieldsToMapKey -> List(ProcessorSchemaField(FirstNameKey, PropertyType.String),
+      ProcessorSchemaField(MiddleNameKey, PropertyType.String),
+      ProcessorSchemaField(LastNameKey, PropertyType.String)).toJson)
 
-    val fieldsToMapPropertyValue = List(ProcessorField(FirstNameKey, PropertyType.String, "$.name." + FirstNameSchemaKey),
-      ProcessorField(MiddleNameKey, PropertyType.String, "$.name." + MiddleNameSchemaKey),
-      ProcessorField(LastNameKey, PropertyType.String, "$.name." + LastNameSchemaKey)).toJson
+    val fieldsToMapPropertyMap = Map(CoreProperties.FieldsToMapKey -> List(ProcessorSchemaField(FirstNameKey, PropertyType.String, "$.name." + FirstNameSchemaKey),
+      ProcessorSchemaField(MiddleNameKey, PropertyType.String, "$.name." + MiddleNameSchemaKey),
+      ProcessorSchemaField(LastNameKey, PropertyType.String, "$.name." + LastNameSchemaKey)).toJson)
 
     "validate fields to map with schema" in {
-      assert(FieldsToMap.schemaCheck(schema.get, defaultFieldsToMapPropertyValue))
+      assert(ProcessorValidation.schemaPathCheck("", "", schema.get, defaultFieldsToMapPropertyMap).isEmpty)
 
-      val invalidFieldsToMapPropertyValue = List(ProcessorField(FirstNameKey, PropertyType.String),
-        ProcessorField(MiddleNameKey, PropertyType.String,"$.somename." + MiddleNameSchemaKey),
-        ProcessorField(LastNameKey, PropertyType.String)).toJson
+      val invalidFieldsToMapPropertyMap = Map(CoreProperties.FieldsToMapKey ->
+        List(
+          ProcessorSchemaField(FirstNameKey, PropertyType.String),
+        ProcessorSchemaField(MiddleNameKey, PropertyType.String,"$.somename." + MiddleNameSchemaKey),
+        ProcessorSchemaField(LastNameKey, PropertyType.String)
+        ).toJson)
 
-      assertThrows[IllegalStateException] {
-        FieldsToMap.schemaCheck(schema.get, invalidFieldsToMapPropertyValue)
-      }
-
-      assert(FieldsToMap.schemaCheck(schema.get, fieldsToMapPropertyValue))
+      assert(ProcessorValidation.schemaPathCheck("", "", schema.get, invalidFieldsToMapPropertyMap).get.validationInfo.size == 1)
+      assert(ProcessorValidation.schemaPathCheck("", "", schema.get, fieldsToMapPropertyMap).isEmpty)
     }
 
 
     "return correct default value for fields to map property" in {
-      assertResult(defaultFieldsToMapPropertyValue.asList[ProcessorField].toSet) {
+      assertResult(defaultFieldsToMapPropertyMap(CoreProperties.FieldsToMapKey).asList[ProcessorSchemaField].toSet) {
         fieldsToMapProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldsToMapKey)
-          .get.defaultValue.asList[ProcessorField].toSet
+          .get.defaultValue.asList[ProcessorSchemaField].toSet
       }
     }
 
     "return correct field values for nulls" in {
       val m = fieldsToMapProcessor.mappings(Some(personWithNulls),
-        Map(CoreProperties.FieldsToMapKey -> fieldsToMapPropertyValue))
+        fieldsToMapPropertyMap)
 
       val fname = m.get(FirstNameKey)
       assert(fname.isEmpty)
@@ -63,7 +63,7 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
 
     "provide valid field mappings for correct json path <-> record combinations" in {
       val m = fieldsToMapProcessor.mappings(Some(person),
-        Map(CoreProperties.FieldsToMapKey -> fieldsToMapPropertyValue))
+        fieldsToMapPropertyMap)
       val fname = m(FirstNameKey).asInstanceOf[String]
       assert(fname == FirstName)
 
@@ -76,7 +76,7 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
 
     "return empty values for incorrect json path <-> record combinations" in {
       val m = fieldsToMapProcessor.mappings(Some(personWithNulls),
-        Map(CoreProperties.FieldsToMapKey -> defaultFieldsToMapPropertyValue))
+        defaultFieldsToMapPropertyMap)
 
       val fname = m.get(FirstNameKey)
       assert(fname.isEmpty)
@@ -126,12 +126,13 @@ object TestFieldsToMapProcessor {
   personWithNulls.put(AgeSchemaKey, Age)
 }
 
+
 class TestFieldsToMapProcessor extends Worker with FieldsToMap {
   import TestFieldsToMapProcessor._
 
-  override def fields: Set[ProcessorField] = Set(ProcessorField(FirstNameKey, PropertyType.String),
-    ProcessorField(MiddleNameKey, PropertyType.String),
-    ProcessorField(LastNameKey, PropertyType.String))
+  override def fields: Set[ProcessorSchemaField] = Set(ProcessorSchemaField(FirstNameKey, PropertyType.String),
+    ProcessorSchemaField(MiddleNameKey, PropertyType.String),
+    ProcessorSchemaField(LastNameKey, PropertyType.String))
 
   override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
