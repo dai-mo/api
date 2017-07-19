@@ -21,7 +21,7 @@ class FieldActionsProcessorSpec  extends ApiUnitWordSpec {
   import TestFieldActionsProcessor._
 
   "Field Actions Processor" should {
-    val fieldActionsprocessor = new TestFieldActionsProcessor
+    val fieldActionsProcessor = new TestFieldActionsProcessor
     val personSchema = AvroSchemaStore.get(sid)
     val personSchemaJson =
       using(this.getClass.getResourceAsStream("/avro/" + sid + ".avsc")) { is =>
@@ -29,34 +29,34 @@ class FieldActionsProcessorSpec  extends ApiUnitWordSpec {
       }
     val input = person.serToBytes(personSchema)
 
-    val defaultFieldActionsPropertyValue = List(Action(ContainsCmd, PropertyType.String),
-      Action(StartsWithCmd, PropertyType.String)).toJson
+    val defaultFieldActionsPropertyMap = Map(CoreProperties.FieldActionsKey ->
+      List(Action(ContainsCmd, PropertyType.String),
+        Action(StartsWithCmd, PropertyType.String)).toJson)
 
-    val validFieldActionsPropertyValue = List(Action(ContainsCmd, PropertyType.String, "$.name.first", "Ob")).toJson
+    val validFieldActionsPropertyMap = Map(CoreProperties.FieldActionsKey ->
+      List(Action(ContainsCmd, PropertyType.String, "$.name.first", "Ob")).toJson)
+
+    val invalidFieldActionsPropertyMap = Map(CoreProperties.FieldActionsKey ->
+      List(Action(ContainsCmd, PropertyType.String, "$.somename.first",  "Ob"),
+        Action(StartsWithCmd, PropertyType.String)).toJson)
 
     "validate field actions with schema" in {
-      assert(FieldActions.schemaCheck(schema.get, defaultFieldActionsPropertyValue))
-
-      assertThrows[IllegalStateException] {
-        FieldActions.schemaCheck(schema.get, List(Action(ContainsCmd, PropertyType.String, "$.somename.first",  "Ob"),
-          Action(StartsWithCmd, PropertyType.String)).toJson)
-      }
-
-      assert(FieldActions.schemaCheck(schema.get, validFieldActionsPropertyValue))
+      assert(ProcessorValidation.schemaPathCheck("", "", schema.get, defaultFieldActionsPropertyMap).isEmpty)
+      assert(ProcessorValidation.schemaPathCheck("", "", schema.get, invalidFieldActionsPropertyMap).get.validationInfo.size == 1)
+      assert(ProcessorValidation.schemaPathCheck("", "", schema.get, validFieldActionsPropertyMap).isEmpty)
     }
 
     "return correct default value for fields actions property" in {
-      assertResult(defaultFieldActionsPropertyValue.asList[Action].toSet) {
-        fieldActionsprocessor.properties().asScala.find(p => p.name == CoreProperties.FieldActionsKey)
+      assertResult(defaultFieldActionsPropertyMap(CoreProperties.FieldActionsKey).asList[Action].toSet) {
+        fieldActionsProcessor.properties().asScala.find(p => p.name == CoreProperties.FieldActionsKey)
           .get.defaultValue.asList[Action].toSet
       }
     }
 
     "return valid response for provided field actions" in {
       assertResult(TestFieldActionsProcessor.person) {
-        fieldActionsprocessor.
-          trigger(input,
-            Map(ReadSchemaKey -> personSchemaJson, FieldActionsKey -> validFieldActionsPropertyValue).asJava)(1).
+        fieldActionsProcessor.
+          trigger(input, (validFieldActionsPropertyMap + (ReadSchemaKey -> personSchemaJson)).asJava)(1).
           deSerToGenericRecord(personSchema, personSchema)
       }
     }

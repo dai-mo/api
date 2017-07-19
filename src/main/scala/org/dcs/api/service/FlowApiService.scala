@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.dcs.api.processor._
 import org.dcs.commons.SchemaAction
+import org.dcs.commons.error.ValidationErrorResponse
 
 import scala.beans.BeanProperty
 import scala.concurrent.Future
@@ -71,9 +72,9 @@ case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var version: Long,
                              @BeanProperty var properties: Map[String, String],
                              @BeanProperty var propertyDefinitions: List[RemoteProperty],
-                             @BeanProperty var validationErrors: List[String],
+                             @BeanProperty var validationErrors: ValidationErrorResponse,
                              @BeanProperty var config: ProcessorConfig) {
-  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Nil, new ProcessorConfig())
+  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, null, new ProcessorConfig())
 }
 
 case class ProcessorType(@BeanProperty var pType:String,

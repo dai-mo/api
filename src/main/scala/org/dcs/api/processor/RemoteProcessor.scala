@@ -26,8 +26,6 @@ object RemoteProcessor {
   val SinkProcessorType = "sink"
   val BatchProcessorType = "batch"
 
-  val RemoteProcessorClassKey = "_PROCESSOR_CLASS"
-
 
   def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
     var schema = coreProperties.readSchema
@@ -65,7 +63,7 @@ object RemoteProcessor {
   }
 
 
-    def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
+  def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
     fromJsonPath(path.split("\\.").toList, currentRecord)
   }
 

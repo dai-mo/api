@@ -16,10 +16,10 @@ import scala.beans.BeanProperty
   * Created by cmathew on 24.03.17.
   */
 
-case class Action(@BeanProperty var name: String,
-                  @BeanProperty var fieldType: String,
-                  @BeanProperty var jsonPath: String = "",
-                  @BeanProperty var args: String = "") {
+case class Action(@BeanProperty name: String,
+                  @BeanProperty fieldType: String,
+                  @BeanProperty jsonPath: String = "",
+                  @BeanProperty args: String = "") {
   def this() = this("", "", PropertyType.String, "")
 
   def fromJsonPath(record: Option[GenericRecord]): Option[GenericRecordObject] = {
