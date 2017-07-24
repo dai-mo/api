@@ -72,9 +72,10 @@ case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var version: Long,
                              @BeanProperty var properties: Map[String, String],
                              @BeanProperty var propertyDefinitions: List[RemoteProperty],
+                             @BeanProperty var relationships: Set[RemoteRelationship],
                              @BeanProperty var validationErrors: ValidationErrorResponse,
                              @BeanProperty var config: ProcessorConfig) {
-  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, null, new ProcessorConfig())
+  def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Set(), null, new ProcessorConfig())
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -121,33 +122,32 @@ trait ProcessorApiService {
 
 case class Connectable(@BeanProperty var id: String,
                        @BeanProperty var componentType: String,
-                       @BeanProperty var flowInstanceId: String) {
-  def this() = this("", "", "")
+                       @BeanProperty var flowInstanceId: String,
+                       @BeanProperty var properties: Map[String, String] = Map()) {
+  def this() = this("", "", "", Map())
 }
 
-case class ConnectionCreate(@BeanProperty var flowInstanceId: String,
+case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
                             @BeanProperty var source: Connectable,
                             @BeanProperty var destination: Connectable,
-                            @BeanProperty var sourceRelationships: Set[String]) {
-  def this() = this("", Connectable("", "", ""), Connectable("", "", ""), Set())
+                            @BeanProperty var selectedRelationships: Set[String],
+                            @BeanProperty var availableRelationships: Set[String]) {
+  def this() = this("", Connectable("", "", ""), Connectable("", "", ""), Set(), Set())
 }
 
 case class Connection(@BeanProperty var id: String,
-                      @BeanProperty var flowInstanceId: String,
                       @BeanProperty var name: String,
                       @BeanProperty var version: Long,
-                      @BeanProperty var source: Connectable,
-                      @BeanProperty var destination: Connectable,
-                      @BeanProperty var sourceRelationships: Set[String],
+                      @BeanProperty var config: ConnectionConfig,
                       @BeanProperty var flowFileExpiration: String,
                       @BeanProperty var backPressureDataSize: String,
                       @BeanProperty var backPressureObjectThreshold: Long,
                       @BeanProperty var prioritizers: List[String]) {
-  def this() = this("", "", "", 0, Connectable("", "", ""), Connectable("", "", ""), Set(), "", "", -1, Nil)
+  def this() = this("", "", 0, new ConnectionConfig(), "", "", -1, Nil)
 }
 
 trait ConnectionApiService {
-  def create(connectionCreate: ConnectionCreate, clientId: String): Future[Connection]
+  def create(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
 }

@@ -102,6 +102,10 @@ object CoreProperties {
       isDynamic = false,
       PropertyLevel.Internal)
 
+  def without(properties: Map[String, String]): Map[String, String] = {
+    properties - ReadSchemaIdKey - ReadSchemaKey - WriteSchemaIdKey - WriteSchemaKey - ProcessorClassKey - ProcessorTypeKey
+  }
+
 }
 
 class CoreProperties(properties: Map[String, String]) {
