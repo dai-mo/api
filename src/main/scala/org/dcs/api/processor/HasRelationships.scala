@@ -18,25 +18,31 @@ trait HasRelationships {
 
 
 case class RemoteRelationship(@BeanProperty var id: String,
-                              @BeanProperty var description: String) {
-  def this() = this("", "")
+                              @BeanProperty var description: String,
+                              @BeanProperty var autoTerminate: Boolean = false) {
+  def this() = this("", "", false)
 }
 
 object RelationshipType {
   val Invalid = RemoteRelationship("invalid",
-    "All records with invalid values will be routed to this relationship")
+    "All records with invalid values will be routed to this relationship",
+    false)
 
   val Valid = RemoteRelationship("valid",
-    "All records with valid values will be routed to this relationship")
+    "All records with valid values will be routed to this relationship",
+    false)
 
   val Success = RemoteRelationship("success",
-    "All status updates will be routed to this relationship")
+    "All status updates will be routed to this relationship",
+    false)
 
   val Failure = RemoteRelationship("failure",
-    "All failed updates will be routed to this relationship")
+    "All failed updates will be routed to this relationship",
+    false)
 
   val Unknown = RemoteRelationship( "unknown",
-    "Represents an unknown Relationship")
+    "Represents an unknown Relationship",
+    false)
 }
 
 
