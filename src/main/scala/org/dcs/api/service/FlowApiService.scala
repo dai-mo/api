@@ -3,8 +3,6 @@ package org.dcs.api.service
 import java.util
 import java.util.Date
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.dcs.api.processor._
 import org.dcs.commons.SchemaAction
 import org.dcs.commons.error.ValidationErrorResponse
@@ -102,6 +100,7 @@ trait ProcessorApiService {
   def create(processorServiceDefinition: ProcessorServiceDefinition,
              processGroupId: String,
              clientId: String): Future[ProcessorInstance]
+  def autoTerminateRelationship(connection: Connection): Future[ProcessorInstance]
   def update(processorInstance: ProcessorInstance, clientId: String): Future[ProcessorInstance]
   def updateProperties(processorId: String, properties: Map[String, String], clientId : String): Future[ProcessorInstance]
   def updateSchema(flowInstanceId: String,
@@ -147,6 +146,7 @@ case class Connection(@BeanProperty var id: String,
 }
 
 trait ConnectionApiService {
+  def find(connectionId: String, clientId: String): Future[Connection]
   def create(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
