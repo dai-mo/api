@@ -102,6 +102,12 @@ object CoreProperties {
       isDynamic = false,
       PropertyLevel.Internal)
 
+  def resetSchemaProperties(properties: Map[String, String]): Map[String, String] = {
+    properties +
+      (FieldsToMapKey -> "") +
+      (FieldActionsKey -> "")
+  }
+
   def without(properties: Map[String, String]): Map[String, String] = {
     properties - ReadSchemaIdKey - ReadSchemaKey - WriteSchemaIdKey - WriteSchemaKey - ProcessorClassKey - ProcessorTypeKey
   }
