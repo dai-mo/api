@@ -103,9 +103,12 @@ object CoreProperties {
       PropertyLevel.Internal)
 
   def resetSchemaProperties(properties: Map[String, String]): Map[String, String] = {
-    properties +
-      (FieldsToMapKey -> "") +
-      (FieldActionsKey -> "")
+
+    properties.map(p => p match {
+      case (CoreProperties.FieldsToMapKey, value) => FieldsToMapKey -> ""
+      case (CoreProperties.FieldActionsKey, value) => FieldActionsKey -> ""
+      case _ => p
+    })
   }
 
   def without(properties: Map[String, String]): Map[String, String] = {
