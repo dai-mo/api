@@ -60,7 +60,8 @@ object ProcessorValidation {
             writeSchema.get,
             CoreProperties.FieldActionsKey,
             value,
-            propertyDefinitions.find(_.name == CoreProperties.FieldActionsKey).get.defaultValue)
+            propertyDefinitions.find(_.name == CoreProperties.FieldActionsKey).get.defaultValue) ++
+            FieldActions.validate(value, processorName, processorId)
         }
         case _ => Nil
       }

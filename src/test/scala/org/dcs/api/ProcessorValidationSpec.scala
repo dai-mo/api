@@ -83,6 +83,22 @@ class ProcessorValidationSpec extends ApiUnitWordSpec {
       assert(ProcessorValidation.validate("", schemaFieldDoesNotExistPropertyMap, List(farp)).isEmpty)
     }
 
+    "return error when specific processor schema validation fails" in {
+      val schemaFieldDoesNotExistPropertyMap =
+        Map(
+          CoreProperties.ProcessorClassKey -> TestClassName,
+          CoreProperties.ReadSchemaIdKey -> SchemaId,
+          CoreProperties.ProcessorTypeKey -> RemoteProcessor.WorkerProcessorType,
+          CoreProperties.FieldActionsKey ->
+            List(
+              Action(ContainsCmd, PropertyType.String, "$.first_name", "")
+            ).toJson
+        )
+      val ver = ProcessorValidation.validate("", schemaFieldDoesNotExistPropertyMap, List(farp)).get
+      assert(ver.validationInfo.size == 1)
+      assert(ver.validationInfo.exists(_(ValidationErrorResponse.ErrorCode) == ErrorConstants.DCS314.code))
+    }
+
     "return error when processor schema field path is invalid " in {
       val invalidSchemaFieldPathPropertyMap =
         Map(

@@ -6,6 +6,7 @@ import java.util.{List => JavaList, Map => JavaMap}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.dcs.commons.SchemaField
+import org.dcs.commons.error.{ErrorConstants, ValidationErrorResponse}
 
 import scala.collection.JavaConverters._
 import org.dcs.commons.serde.JsonSerializerImplicits._
@@ -34,6 +35,24 @@ object FieldActions {
       if(fa.jsonPath.nonEmpty && !SchemaField.validatePath(schema, fa.jsonPath))
         throw new IllegalStateException("Required field " + fa.jsonPath + " does not exist in schema"))
     true
+  }
+
+  def validate(fieldActions: String, processorName: String, processorId: String):List[Map[String, String]] = {
+    if(fieldActions.nonEmpty)
+      fieldActions.asList[Action].filter(_.args.isEmpty)
+        .map(fa =>
+          ValidationErrorResponse
+            .processorSchemaFieldValidation(
+              ErrorConstants.DCS314.withDescription("Arguments of action " + fa.name + " cannot be empty"),
+              processorName,
+              processorId,
+              CoreProperties.FieldActionsKey,
+              fa.name,
+              fa.jsonPath,
+              fa.fieldType)
+        )
+    else
+      Nil
   }
 }
 
