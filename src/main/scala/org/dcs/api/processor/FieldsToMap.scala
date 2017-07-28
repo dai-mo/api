@@ -32,12 +32,12 @@ trait FieldsToMap extends RemoteProcessor {
     props
   }
 
-  def mappings(record: Option[GenericRecord], properties: Map[String, String]): Map[String, Object] =
+  def mappings(record: Option[GenericRecord], properties: Map[String, String]): Map[String, List[Object]] =
     record.mappings(properties.asJava)
 
   implicit class GenericRecordTypes(record: Option[GenericRecord]) {
 
-    def mappings(properties: JavaMap[String, String]): Map[String, Object] = {
+    def mappings(properties: JavaMap[String, String]): Map[String, List[Object]] = {
 
       properties.asScala.
         find(p => p._1 == CoreProperties.FieldsToMapKey)
@@ -46,9 +46,9 @@ trait FieldsToMap extends RemoteProcessor {
           .map(f => (f._1, f._2.flatMap(_.value)))
           .filter(fgr => fgr._2.isDefined)
           .map(fgr => (fgr._1, fgr._2.get))
-          .toMap)
-        .getOrElse(Map[String, Object]())
-
+          .groupBy(k => k._1)
+          .mapValues(t => t.map(_._2)))
+        .getOrElse(Map())
     }
   }
 }
