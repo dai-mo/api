@@ -64,14 +64,14 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
     "provide valid field mappings for correct json path <-> record combinations" in {
       val m = fieldsToMapProcessor.mappings(Some(person),
         fieldsToMapPropertyMap)
-      val fname = m(FirstNameKey).asInstanceOf[String]
-      assert(fname == FirstName)
+      val fname = m(FirstNameKey).asInstanceOf[List[String]]
+      assert(fname.head == FirstName)
 
-      val mname = m(MiddleNameKey).asInstanceOf[String]
-      assert(mname == MiddleName)
+      val mname = m(MiddleNameKey).asInstanceOf[List[String]]
+      assert(mname.head == MiddleName)
 
-      val lname = m(LastNameKey).asInstanceOf[String]
-      assert(lname == LastName)
+      val lname = m(LastNameKey).asInstanceOf[List[String]]
+      assert(lname.head == LastName)
     }
 
     "return empty values for incorrect json path <-> record combinations" in {
