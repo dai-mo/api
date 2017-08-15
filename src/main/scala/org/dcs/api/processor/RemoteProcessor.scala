@@ -79,49 +79,67 @@ trait RemoteProcessor extends BaseProcessor
   with ProcessorDefinition {
   import RemoteProcessor._
 
+  def resultError(t: Throwable): Array[Array[Byte]] = Array(RelationshipType.Failure.id.getBytes,
+    ErrorConstants.DCS306.withDescription(Option(t.getMessage).getOrElse(t.getClass.getName)).
+      avroRecord().
+      serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+
   def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]]
 
-  def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
-    def resultError(t: Throwable) = Array(RelationshipType.Failure.id.getBytes,
-      ErrorConstants.DCS306.withDescription(Option(t.getMessage).getOrElse(t.getClass.getName)).
-        avroRecord().
-        serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
-
+  def resolveSchemas(hasInput: Boolean, properties: JavaMap[String, String]): (Option[Schema], Option[Schema]) = {
     val coreProperties: CoreProperties = CoreProperties(properties.asScala.toMap)
+
+    var readSchema = resolveReadSchema(coreProperties)
+    if(hasInput && readSchema.isEmpty)
+      throw new IllegalStateException("Read Schema for  " + className + " not available")
+
+
+    val writeSchema = resolveWriteSchema(coreProperties, Option(schemaId))
+    if(writeSchema.isEmpty)
+      throw new IllegalStateException("Write Schema for  " + className + " not available")
+    (readSchema, writeSchema)
+  }
+
+  def inputToGenericRecord(input: Array[Byte], readSchema: Option[Schema], writeSchema: Option[Schema]): Option[GenericRecord] = {
+
+    Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, readSchema))
+  }
+
+  def resultToOutput(hasInput: Boolean,
+                     out: Either[ErrorResponse, (String, AnyRef)],
+                     readSchema: Option[Schema],
+                     writeSchema: Option[Schema]): Array[Array[Byte]] = {
+    try {
+      out match {
+        case Left(error) =>  Array(RelationshipType.Failure.id.getBytes,
+          error.serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+        case Right(relRecord) => Array(relRecord._1.getBytes,
+          // FIXME: This really needs to be optimised (to avoid double ser / deser)
+          //        This is due to the fact that GenericRecord is essentially immutable
+          //        We need to extend GenericRecord to allow for removing fields
+          if(!hasInput || (schemaId != null && schemaId.nonEmpty))
+            relRecord._2.serToBytes(writeSchema)
+          else
+            relRecord._2
+              .serToBytes(readSchema)
+              .deSerToGenericRecord(readSchema, writeSchema)
+              .serToBytes(writeSchema))
+      }
+    } catch {
+      case NonFatal(t) => resultError(t)
+    }
+  }
+
+
+  def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
 
     try {
 
-      var readSchema = resolveReadSchema(coreProperties)
-      if(!input.isEmpty && readSchema.isEmpty)
-        throw new IllegalStateException("Read Schema for  " + className + " not available")
-
-
-      val writeSchema = resolveWriteSchema(coreProperties)
-      if(writeSchema.isEmpty)
-        throw new IllegalStateException("Write Schema for  " + className + " not available")
-
-      val in = Option(input).map(input => if(input.isEmpty) null else input.deSerToGenericRecord(readSchema, readSchema))
+      val (readSchema, writeSchema) = resolveSchemas(input.nonEmpty, properties)
+      val in = inputToGenericRecord(input, readSchema, writeSchema)
 
       execute(in, properties).flatMap { out =>
-        try {
-          out match {
-            case Left(error) =>  Array(RelationshipType.Failure.id.getBytes,
-              error.serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
-            case Right(relRecord) => Array(relRecord._1.getBytes,
-              // FIXME: This really needs to be optimised (to avoid double ser / deser)
-              //        This is due to the fact that GenericRecord is essentially immutable
-              //        We need to extend GenericRecord to allow for removing fields
-              if(input.isEmpty || (schemaId != null && schemaId.nonEmpty))
-                relRecord._2.serToBytes(writeSchema)
-              else
-                relRecord._2
-                  .serToBytes(readSchema)
-                  .deSerToGenericRecord(readSchema, writeSchema)
-                  .serToBytes(writeSchema))
-          }
-        } catch {
-          case NonFatal(t) => resultError(t)
-        }
+        resultToOutput(input.nonEmpty, out, readSchema, writeSchema)
       }.toArray
     } catch {
       case NonFatal(t) => resultError(t)
@@ -138,16 +156,16 @@ trait RemoteProcessor extends BaseProcessor
   // but since all public or protected the methods in Remote Processor are exposed over soap,
   // this method will also be unnecessarily exposed over soap. Hence the reason why this is a private method
   // in RemoteProcessor
-  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
-    case IngestionProcessorType => None
-    case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
-    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
-  }
-
-  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
-    case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
-    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
-  }
+//  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
+//    case IngestionProcessorType => None
+//    case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
+//    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
+//  }
+//
+//  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
+//    case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
+//    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
+//  }
 
 
   implicit class GenericRecordFields(record: Option[GenericRecord]) {
