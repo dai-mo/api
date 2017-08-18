@@ -32,23 +32,34 @@ trait FieldsToMap extends RemoteProcessor {
     props
   }
 
-  def mappings(record: Option[GenericRecord], properties: Map[String, String]): Map[String, List[Object]] =
+  def mappings(record: Option[GenericRecord], properties: Map[String, String]): Map[String, List[(String, Object)]] =
     record.mappings(properties.asJava)
 
   implicit class GenericRecordTypes(record: Option[GenericRecord]) {
 
-    def mappings(properties: JavaMap[String, String]): Map[String, List[Object]] = {
+    def mappings(properties: JavaMap[String, String]): Map[String, List[(String, Object)]] = {
 
       properties.asScala.
         find(p => p._1 == CoreProperties.FieldsToMapKey)
         .map(p => p._2.asList[ProcessorSchemaField])
-        .map(flist => flist.map(f => (f.name, record.fromJsonPath(f.jsonPath)))
-          .map(f => (f._1, f._2.flatMap(_.value)))
-          .filter(fgr => fgr._2.isDefined)
-          .map(fgr => (fgr._1, fgr._2.get))
+        .map(flist => flist.map(f => (f.name, (f.jsonPath, record.fromJsonPath(f.jsonPath))))
+          .map(f => (f._1, (f._2._1, f._2._2.flatMap(_.value))))
+          .filter(fgr => fgr._2._2.isDefined)
+          .map(fgr => (fgr._1, (fgr._2._1, fgr._2._2.get)))
           .groupBy(k => k._1)
           .mapValues(t => t.map(_._2)))
         .getOrElse(Map())
+    }
+  }
+
+  implicit class MappingUtils(mappings: Option[List[(String, Object)]]) {
+
+    def values[T](): List[T] = {
+      mappings.map(m => m.map(_._2)).map(_.asInstanceOf[List[T]]).getOrElse(Nil)
+    }
+
+    def asMap[T](): Map[String, Object] = {
+      mappings.map(_.toMap[String, Object]).getOrElse(Map())
     }
   }
 }

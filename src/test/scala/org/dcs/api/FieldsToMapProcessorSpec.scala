@@ -5,7 +5,7 @@ import java.util
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.dcs.api.processor.{FieldsToMap, _}
 import org.dcs.commons.error.ErrorResponse
-import org.dcs.commons.serde.AvroSchemaStore
+import org.dcs.commons.serde.{AvroSchemaStore, JsonPath}
 
 import scala.collection.JavaConverters._
 import org.dcs.commons.serde.JsonSerializerImplicits._
@@ -13,7 +13,7 @@ import org.dcs.commons.serde.JsonSerializerImplicits._
 /**
   * Created by cmathew on 22.03.17.
   */
-class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
+class FieldsToMapProcessorSpec extends ApiUnitWordSpec with FieldsToMap {
   import TestFieldsToMapProcessor._
 
 
@@ -62,15 +62,20 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
     }
 
     "provide valid field mappings for correct json path <-> record combinations" in {
+
       val m = fieldsToMapProcessor.mappings(Some(person),
         fieldsToMapPropertyMap)
-      val fname = m(FirstNameKey).asInstanceOf[List[String]]
-      assert(fname.head == FirstName)
 
-      val mname = m(MiddleNameKey).asInstanceOf[List[String]]
+      val fnames = m.get(FirstNameKey)
+      val fnamevals = fnames.values[String]
+      assert(fnamevals.head == FirstName)
+      val fnamejsonpaths = fnames.asMap().keys
+      assert(fnamejsonpaths.head == JsonPath.Root + JsonPath.Sep + NameSchemaKey + JsonPath.Sep + FirstNameSchemaKey)
+
+      val mname = m(MiddleNameKey).map(_._2).asInstanceOf[List[String]]
       assert(mname.head == MiddleName)
 
-      val lname = m(LastNameKey).asInstanceOf[List[String]]
+      val lname = m(LastNameKey).map(_._2).asInstanceOf[List[String]]
       assert(lname.head == LastName)
     }
 
@@ -85,6 +90,16 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec {
       assert(lname.isEmpty)
     }
   }
+
+  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = ???
+
+  override def metadata(): MetaData = ???
+
+  override def configuration: Configuration = ???
+
+  override def processorType(): String = ???
+
+  override def fields: Set[ProcessorSchemaField] = ???
 }
 
 object TestFieldsToMapProcessor {

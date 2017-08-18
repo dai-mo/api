@@ -1,6 +1,7 @@
 package org.dcs.api.processor
 
 import java.nio.ByteBuffer
+import java.util
 import java.util.{Map => JavaMap}
 
 import com.google.common.net.MediaType
@@ -236,9 +237,14 @@ trait RemoteProcessor extends BaseProcessor
 
     def asList[T]: Option[List[T]] = value.map(_.asInstanceOf[List[T]])
 
-    def asMap[K, V]: Option[Map[K, V]] = value.map(_.asInstanceOf[Map[K, V]])
+    def asTupleList[T]: Option[List[(String, T)]] =  value.map(_.asInstanceOf[List[(String,T)]])
+      .map(d => d.map(r => (r._1.toString, r._2.asInstanceOf[T])))
+
+    def asMap[K, V]: Option[Map[K, V]] = value.map(_.asInstanceOf[util.HashMap[K, V]].asScala.toMap)
 
     def asGenericFixed: Option[GenericFixed] = value.map(_.asInstanceOf[GenericFixed])
+
+
   }
 
   implicit class GenericRecordObjectAccess(gro: Option[GenericRecordObject]) {
