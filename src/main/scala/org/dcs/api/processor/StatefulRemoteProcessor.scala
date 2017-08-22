@@ -20,14 +20,14 @@ trait StatefulRemoteProcessor extends RemoteProcessor {
 
   def onAdd(): Boolean = true
 
-  def onSchedule(properties: JavaList[RemoteProperty]): Boolean = true
+  def onSchedule(propertyValues: JavaMap[RemoteProperty, String]): Boolean = true
 
-  def onUnschedule(properties: JavaList[RemoteProperty]): Boolean = true
+  def onUnschedule(propertyValues: JavaMap[RemoteProperty, String]): Boolean = true
 
-  def onStop(properties: JavaList[RemoteProperty]): Boolean = true
+  def onStop(propertyValues: JavaMap[RemoteProperty, String]): Boolean = true
 
-  def onShutdown(properties: JavaList[RemoteProperty]): Boolean = true
+  def onShutdown(propertyValues: JavaMap[RemoteProperty, String]): Boolean = true
 
-  def onRemove(properties: JavaList[RemoteProperty]): Boolean = true
+  def onRemove(propertyValues: JavaMap[RemoteProperty, String]): Boolean = true
 
 }

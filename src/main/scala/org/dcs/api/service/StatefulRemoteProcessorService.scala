@@ -31,9 +31,9 @@ trait StatefulRemoteProcessorService extends RemoteProcessorService  {
   }
 
   def onInstanceSchedule(processorStateId: String,
-                         properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
+                         propertyValues: JavaMap[RemoteProperty, String]): Boolean = get(processorStateId) match {
     case None => false
-    case Some(p) => p.onSchedule(properties); true
+    case Some(p) => p.onSchedule(propertyValues); true
   }
 
   def instanceExecute(processorStateId: String,
@@ -53,28 +53,28 @@ trait StatefulRemoteProcessorService extends RemoteProcessorService  {
     }
 
   def onInstanceUnschedule(processorStateId: String,
-                           properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
+                           propertyValues: JavaMap[RemoteProperty, String]): Boolean = get(processorStateId) match {
     case None => false
-    case Some(p) => p.onUnschedule(properties); true
+    case Some(p) => p.onUnschedule(propertyValues); true
   }
 
   def onInstanceStop(processorStateId: String,
-                     properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
+                     propertyValues: JavaMap[RemoteProperty, String]): Boolean = get(processorStateId) match {
     case None => false
-    case Some(p) => p.onStop(properties); true
+    case Some(p) => p.onStop(propertyValues); true
   }
 
   def onInstanceShutdown(processorStateId: String,
-                         properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
+                         propertyValues: JavaMap[RemoteProperty, String]): Boolean = get(processorStateId) match {
     case None => false
-    case Some(p) => p.onShutdown(properties); true
+    case Some(p) => p.onShutdown(propertyValues); true
   }
 
   def onInstanceRemove(processorStateId: String,
-                       properties: JavaList[RemoteProperty]): Boolean = get(processorStateId) match {
+                       propertyValues: JavaMap[RemoteProperty, String]): Boolean = get(processorStateId) match {
     case None => false
     case Some(p) => {
-      p.onRemove(properties)
+      p.onRemove(propertyValues)
       remove(processorStateId)
       true
     }
