@@ -26,6 +26,7 @@ object RemoteProcessor {
   val WorkerProcessorType = "worker"
   val SinkProcessorType = "sink"
   val BatchProcessorType = "batch"
+  val ExternalProcessorType = "external"
 
 
   def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
@@ -63,31 +64,10 @@ object RemoteProcessor {
     resolveWriteSchema(CoreProperties(properties.asScala.toMap), schemaId)
   }
 
-
-  def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
-    fromJsonPath(path.split("\\.").toList, currentRecord)
-  }
-
-  def fromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = path match {
-    case Nil => None
-    case last :: Nil => currentRecord.map(r => GenericRecordObject(r, last))
-    case "$" :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r)))
-    case head :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r.get(head)).map(_.asInstanceOf[GenericRecord])))
-  }
-}
-
-trait RemoteProcessor extends BaseProcessor
-  with ProcessorDefinition {
-  import RemoteProcessor._
-
-  def resultError(t: Throwable): Array[Array[Byte]] = Array(RelationshipType.Failure.id.getBytes,
-    ErrorConstants.DCS306.withDescription(Option(t.getMessage).getOrElse(t.getClass.getName)).
-      avroRecord().
-      serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
-
-  def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]]
-
-  def resolveSchemas(hasInput: Boolean, properties: JavaMap[String, String]): (Option[Schema], Option[Schema]) = {
+  def resolveSchemas(hasInput: Boolean,
+                     properties: JavaMap[String, String],
+                     className: String,
+                     schemaId: String): (Option[Schema], Option[Schema]) = {
     val coreProperties: CoreProperties = CoreProperties(properties.asScala.toMap)
 
     var readSchema = resolveReadSchema(coreProperties)
@@ -109,7 +89,8 @@ trait RemoteProcessor extends BaseProcessor
   def resultToOutput(hasInput: Boolean,
                      out: Either[ErrorResponse, (String, AnyRef)],
                      readSchema: Option[Schema],
-                     writeSchema: Option[Schema]): Array[Array[Byte]] = {
+                     writeSchema: Option[Schema],
+                     schemaId: String): Array[Array[Byte]] = {
     try {
       out match {
         case Left(error) =>  Array(RelationshipType.Failure.id.getBytes,
@@ -131,6 +112,34 @@ trait RemoteProcessor extends BaseProcessor
     }
   }
 
+  def resultError(t: Throwable): Array[Array[Byte]] = Array(RelationshipType.Failure.id.getBytes,
+    ErrorConstants.DCS306.withDescription(Option(t.getMessage).getOrElse(t.getClass.getName)).
+      avroRecord().
+      serToBytes(Some(AvroSchemaStore.errorResponseSchema())))
+
+  def fromJsonPath(path: String, currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = {
+    fromJsonPath(path.split("\\.").toList, currentRecord)
+  }
+
+  def fromJsonPath(path: List[String], currentRecord: Option[GenericRecord]): Option[GenericRecordObject] = path match {
+    case Nil => None
+    case last :: Nil => currentRecord.map(r => GenericRecordObject(r, last))
+    case "$" :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r)))
+    case head :: tail => currentRecord.flatMap(r => fromJsonPath(tail, Option(r.get(head)).map(_.asInstanceOf[GenericRecord])))
+  }
+}
+
+trait RemoteProcessor extends BaseProcessor
+  with ProcessorDefinition {
+
+  import RemoteProcessor._
+
+  def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]]
+
+  def resolveSchemas(hasInput: Boolean, properties: JavaMap[String, String]): (Option[Schema], Option[Schema]) = {
+    RemoteProcessor.resolveSchemas(hasInput, properties, className, schemaId)
+  }
+
 
   def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
 
@@ -140,7 +149,7 @@ trait RemoteProcessor extends BaseProcessor
       val in = inputToGenericRecord(input, readSchema, writeSchema)
 
       execute(in, properties).flatMap { out =>
-        resultToOutput(input.nonEmpty, out, readSchema, writeSchema)
+        resultToOutput(input.nonEmpty, out, readSchema, writeSchema, schemaId)
       }.toArray
     } catch {
       case NonFatal(t) => resultError(t)
@@ -157,16 +166,16 @@ trait RemoteProcessor extends BaseProcessor
   // but since all public or protected the methods in Remote Processor are exposed over soap,
   // this method will also be unnecessarily exposed over soap. Hence the reason why this is a private method
   // in RemoteProcessor
-//  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
-//    case IngestionProcessorType => None
-//    case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
-//    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
-//  }
-//
-//  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
-//    case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
-//    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
-//  }
+  //  private def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
+  //    case IngestionProcessorType => None
+  //    case WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveReadSchema(coreProperties)
+  //    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
+  //  }
+  //
+  //  private def resolveWriteSchema(coreProperties: CoreProperties): Option[Schema] = processorType match {
+  //    case IngestionProcessorType | WorkerProcessorType | SinkProcessorType => RemoteProcessor.resolveWriteSchema(coreProperties, Option(schemaId))
+  //    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
+  //  }
 
 
   implicit class GenericRecordFields(record: Option[GenericRecord]) {
@@ -297,6 +306,27 @@ trait Sink extends RemoteProcessor {
     outputMimeType = MediaType.OCTET_STREAM.toString,
     processorClassName =  className,
     inputRequirementType = InputRequirementType.InputRequired)
+}
+
+trait External extends RemoteProcessor {
+  // if(schemaId != null && !schemaId.isEmpty) AvroSchemaStore.add(schemaId)
+
+  override def processorType(): String = RemoteProcessor.ExternalProcessorType
+
+  override def configuration: Configuration = Configuration(inputMimeType = MediaType.OCTET_STREAM.toString,
+    outputMimeType = MediaType.OCTET_STREAM.toString,
+    processorClassName =  className,
+    inputRequirementType = InputRequirementType.InputForbidden)
+
+  override def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] =
+    throw new UnsupportedOperationException
+
+  override def execute(record: Option[GenericRecord],
+                       propertyValues: util.Map[String, String]): List[Either[ErrorResponse, (String, GenericRecord)]] =
+    throw new UnsupportedOperationException
+
+  override def schemaId: String = className
+
 }
 
 
