@@ -1,18 +1,17 @@
 package org.dcs.api
 
-import java.util
+import java.util.{Map => JavaMap}
 
 import org.apache.avro.generic.{GenericData, GenericRecord}
-import org.apache.avro.util.Utf8
 import org.apache.commons.io.IOUtils
+import org.dcs.api.processor.CoreProperties._
 import org.dcs.api.processor._
+import org.dcs.commons.Control._
 import org.dcs.commons.error.ErrorResponse
+import org.dcs.commons.serde.AvroImplicits._
 import org.dcs.commons.serde.AvroSchemaStore
 
 import scala.collection.JavaConverters._
-import org.dcs.commons.Control._
-import org.dcs.commons.serde.AvroImplicits._
-import CoreProperties._
 
 /**
   * Created by cmathew on 16.03.17.
@@ -176,7 +175,7 @@ object TestWorkerProcessor {
 class TestWorkerProcessor extends Worker {
 
   override def execute(record: Option[GenericRecord],
-                       properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
+                       properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
     List(Right((RelationshipType.Success.id, record.get)))
   }
@@ -190,7 +189,7 @@ class TestWorkerProcessorWithSchema extends TestWorkerProcessor {
   import TestWorkerProcessor._
 
   override def execute(record: Option[GenericRecord],
-                       properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
+                       properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
     List(Right((RelationshipType.Success.id, personWoAge)))
   }

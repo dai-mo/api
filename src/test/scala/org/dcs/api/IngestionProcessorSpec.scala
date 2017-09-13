@@ -1,6 +1,6 @@
 package org.dcs.api
 
-import java.util
+import java.util.{Map => JavaMap}
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericRecord}
@@ -113,7 +113,7 @@ class TestIngestionProcessor extends Ingestion {
   import TestIngestionProcessor._
 
   override def execute(record: Option[GenericRecord],
-                       properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
+                       properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
     List(Right((RelationshipType.Success.id, person)))
   }
