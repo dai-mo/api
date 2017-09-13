@@ -1,6 +1,6 @@
 package org.dcs.api
 
-import java.util
+import java.util.{Map => JavaMap}
 
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.dcs.api.processor.{FieldsToMap, _}
@@ -91,7 +91,7 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec with FieldsToMap {
     }
   }
 
-  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = ???
+  override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = ???
 
   override def metadata(): MetaData = ???
 
@@ -149,7 +149,7 @@ class TestFieldsToMapProcessor extends Worker with FieldsToMap {
     ProcessorSchemaField(MiddleNameKey, PropertyType.String),
     ProcessorSchemaField(LastNameKey, PropertyType.String))
 
-  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
+  override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 
     List(Right((RelationshipType.Success.id, record.get)))
   }

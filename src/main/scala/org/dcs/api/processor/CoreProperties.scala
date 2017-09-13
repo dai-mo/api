@@ -17,12 +17,16 @@ object CoreProperties {
   val WriteSchemaIdKey = "_WRITE_SCHEMA_ID"
   val ReadSchemaKey = "_READ_SCHEMA"
   val WriteSchemaKey = "_WRITE_SCHEMA"
+  val SchemaIdKey = "_SCHEMA_ID"
 
   val FieldsToMapKey = "_FIELDS_TO_MAP"
   val FieldActionsKey = "_FIELDS_ACTIONS"
 
   val ProcessorTypeKey = "_PROCESSOR_TYPE"
   val ProcessorClassKey = "_PROCESSOR_CLASS"
+
+  val ReceiverKey = "_EXTERNAL_RECEIVER"
+  val SenderKey = "_EXTERNAL_SENDER"
 
   val SchemaNamespace = "org.dcs.processor"
 
@@ -101,6 +105,7 @@ object CoreProperties {
       isRequired = true,
       isDynamic = false,
       PropertyLevel.Internal)
+
 
   def resetSchemaProperties(properties: Map[String, String]): Map[String, String] = {
 

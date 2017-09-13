@@ -1,6 +1,6 @@
 package org.dcs.api
 
-import java.util
+import java.util.{Map => JavaMap}
 
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.commons.io.IOUtils
@@ -103,7 +103,7 @@ class TestFieldActionsProcessor extends Worker with FieldActions {
 
   override def cmds: Set[Action] = Set(Action("contains", PropertyType.String), Action("starts with", PropertyType.String))
 
-  override def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
+  override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
     val isValid: Boolean = actions(properties).map(a => a.name match {
       case ContainsCmd => a.fromJsonPath(record).value.asString.exists(s => s.contains(a.args))
       case StartsWithCmd => a.fromJsonPath(record).value.asString.exists(s => s.contains(a.args))
