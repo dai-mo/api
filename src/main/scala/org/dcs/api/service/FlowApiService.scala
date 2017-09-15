@@ -148,6 +148,8 @@ case class Connection(@BeanProperty var id: String,
 trait ConnectionApiService {
   def find(connectionId: String, clientId: String): Future[Connection]
   def create(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
+  def createProcessorConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
+  def createPortConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
 }
@@ -176,11 +178,25 @@ trait ProvenanceApiService {
 
 // --- Flow Data Models / API start ---
 
+case class IOPort(@BeanProperty id: String,
+                  @BeanProperty name: String,
+                  @BeanProperty `type`: String,
+                  @BeanProperty status: String)
+
 trait IFlowDataService {
   def provenanceByComponentId(cid: String, maxResults: Int): util.List[Provenance]
 }
 
 // --- Flow Data Models / API end ---
+
+// --- Flow IO Port Models / API start ---
+
+trait IOPortApiService {
+  def createInputPort(processGroupId: String, clientId: String): Future[IOPort]
+  def createOutputPort(processGroupId: String, clientId: String): Future[IOPort]
+}
+
+// --- Flow IO Port Models / API end ---
 
 object FlowComponent {
   val ProcessorType = "PROCESSOR"
