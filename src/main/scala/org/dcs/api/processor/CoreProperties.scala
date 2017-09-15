@@ -25,9 +25,6 @@ object CoreProperties {
   val ProcessorTypeKey = "_PROCESSOR_TYPE"
   val ProcessorClassKey = "_PROCESSOR_CLASS"
 
-  val ReceiverKey = "_EXTERNAL_RECEIVER"
-  val SenderKey = "_EXTERNAL_SENDER"
-
   val SchemaNamespace = "org.dcs.processor"
 
   def remoteProperty(key: String,

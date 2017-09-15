@@ -129,8 +129,8 @@ case class Connectable(@BeanProperty var id: String,
 case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
                             @BeanProperty var source: Connectable,
                             @BeanProperty var destination: Connectable,
-                            @BeanProperty var selectedRelationships: Set[String],
-                            @BeanProperty var availableRelationships: Set[String]) {
+                            @BeanProperty var selectedRelationships: Set[String] = Set(),
+                            @BeanProperty var availableRelationships: Set[String] = Set()) {
   def this() = this("", Connectable("", "", ""), Connectable("", "", ""), Set(), Set())
 }
 
@@ -149,7 +149,7 @@ trait ConnectionApiService {
   def find(connectionId: String, clientId: String): Future[Connection]
   def create(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def createProcessorConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
-  def createPortConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
+  def createStdConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
 }
@@ -192,14 +192,17 @@ trait IFlowDataService {
 // --- Flow IO Port Models / API start ---
 
 trait IOPortApiService {
-  def createInputPort(processGroupId: String, clientId: String): Future[IOPort]
-  def createOutputPort(processGroupId: String, clientId: String): Future[IOPort]
+  def inputPort(id: String): Future[IOPort]
+  def outputPort(id: String): Future[IOPort]
+  def createInputPort(processGroupId: String, clientId: String): Future[(IOPort, Connection)]
+  def createOutputPort(processGroupId: String, clientId: String): Future[(IOPort, Connection)]
 }
 
 // --- Flow IO Port Models / API end ---
 
 object FlowComponent {
   val ProcessorType = "PROCESSOR"
+  val ExternalProcessorType = "EXTERNAL_PROCESSOR"
   val RemoteInputPortType = "REMOTE_INPUT_PORT"
   val RemoteOutputPortType = "REMOTE_OUTPUT_PORT"
   val InputPortType = "INPUT_PORT"

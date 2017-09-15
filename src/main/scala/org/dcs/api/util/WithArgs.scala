@@ -1,12 +1,13 @@
 package org.dcs.api.util
 
 object WithArgs {
-  val TargetArgSep = "\\?"
+  val TargetArgSep = "?"
+  val TargetArgSepEscaped = "\\?"
   val ArgSep = "&"
   val ArgAssignSymbol = "="
 
   def apply(withArgsStr: String): WithArgs = {
-    val targetArgStr = withArgsStr.split(TargetArgSep)
+    val targetArgStr = withArgsStr.split(TargetArgSepEscaped)
     val target = targetArgStr(0)
     val args = if(targetArgStr.size > 1) {
       val argStr = targetArgStr(1)

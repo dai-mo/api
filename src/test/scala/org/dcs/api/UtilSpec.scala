@@ -11,7 +11,7 @@ class UtilSpec extends ApiUnitFlatSpec {
     val Arg2 = "arg2"
     val Val2 = "val2"
 
-    val withArgsStr = Target + WithArgs.TargetArgSep +
+    val withArgsStr = Target + WithArgs.TargetArgSepEscaped +
       Arg1 + WithArgs.ArgAssignSymbol + Val1 + WithArgs.ArgSep +
       Arg2 + WithArgs.ArgAssignSymbol + Val2
 
