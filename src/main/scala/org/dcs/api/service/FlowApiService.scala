@@ -131,7 +131,7 @@ case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
                             @BeanProperty var destination: Connectable,
                             @BeanProperty var selectedRelationships: Set[String] = Set(),
                             @BeanProperty var availableRelationships: Set[String] = Set()) {
-  def this() = this("", Connectable("", "", ""), Connectable("", "", ""), Set(), Set())
+  def this() = this("", Connectable("", "", ""), Connectable("", "", ""))
 }
 
 case class Connection(@BeanProperty var id: String,
@@ -141,8 +141,14 @@ case class Connection(@BeanProperty var id: String,
                       @BeanProperty var flowFileExpiration: String,
                       @BeanProperty var backPressureDataSize: String,
                       @BeanProperty var backPressureObjectThreshold: Long,
-                      @BeanProperty var prioritizers: List[String]) {
+                      @BeanProperty var prioritizers: List[String],
+                      @BeanProperty var relatedConnections: Set[Connection] = Set()) {
   def this() = this("", "", 0, new ConnectionConfig(), "", "", -1, Nil)
+
+  def withConnection(connection: Connection): Connection = {
+    relatedConnections = relatedConnections + connection
+    this
+  }
 }
 
 trait ConnectionApiService {
@@ -152,6 +158,7 @@ trait ConnectionApiService {
   def createStdConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
+  def remove(connection: Connection, version: Long, clientId: String): Future[Boolean]
 }
 
 // --- Connection Models/ API End ---
@@ -180,6 +187,7 @@ trait ProvenanceApiService {
 
 case class IOPort(@BeanProperty id: String,
                   @BeanProperty name: String,
+                  @BeanProperty version: Long,
                   @BeanProperty `type`: String,
                   @BeanProperty status: String)
 
@@ -196,6 +204,16 @@ trait IOPortApiService {
   def outputPort(id: String): Future[IOPort]
   def createInputPort(processGroupId: String, clientId: String): Future[(IOPort, Connection)]
   def createOutputPort(processGroupId: String, clientId: String): Future[(IOPort, Connection)]
+  def deleteInputPort(inputPortId: String, version: Long, clientId: String): Future[Option[IOPort]]
+  def deleteInputPort(rootPortId: String,
+                      inputPortId: String,
+                      version: Long,
+                      clientId: String): Future[Boolean]
+  def deleteOutputPort(outputPortId: String, version: Long, clientId: String):  Future[Option[IOPort]]
+  def deleteOutputPort(outputPortId: String,
+                       rootPortId: String,
+                       version: Long,
+                       clientId: String): Future[Boolean]
 }
 
 // --- Flow IO Port Models / API end ---
