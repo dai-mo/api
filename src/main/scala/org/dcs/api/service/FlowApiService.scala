@@ -44,7 +44,7 @@ trait FlowApiService {
   def instances(): Future[List[FlowInstance]]
   def start(flowInstanceId: String): Future[FlowInstance]
   def stop(flowInstanceId: String): Future[FlowInstance]
-  def remove(flowInstanceId: String, version: Long, clientId: String): Future[Boolean]
+  def remove(flowInstanceId: String, version: Long, clientId: String, externalConnections: List[Connection] = Nil): Future[Boolean]
 }
 
 // --- Flow Models/ API End ---
@@ -122,16 +122,17 @@ trait ProcessorApiService {
 case class Connectable(@BeanProperty var id: String,
                        @BeanProperty var componentType: String,
                        @BeanProperty var flowInstanceId: String,
-                       @BeanProperty var properties: Map[String, String] = Map()) {
-  def this() = this("", "", "", Map())
+                       @BeanProperty var properties: Map[String, String] = Map(),
+                       @BeanProperty var name: String = "") {
+  def this() = this("", "", "", Map(), "")
 }
 
 case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
                             @BeanProperty var source: Connectable,
                             @BeanProperty var destination: Connectable,
-                            @BeanProperty var selectedRelationships: Set[String],
-                            @BeanProperty var availableRelationships: Set[String]) {
-  def this() = this("", Connectable("", "", ""), Connectable("", "", ""), Set(), Set())
+                            @BeanProperty var selectedRelationships: Set[String] = Set(),
+                            @BeanProperty var availableRelationships: Set[String] = Set()) {
+  def this() = this("", Connectable("", "", ""), Connectable("", "", ""))
 }
 
 case class Connection(@BeanProperty var id: String,
@@ -141,15 +142,24 @@ case class Connection(@BeanProperty var id: String,
                       @BeanProperty var flowFileExpiration: String,
                       @BeanProperty var backPressureDataSize: String,
                       @BeanProperty var backPressureObjectThreshold: Long,
-                      @BeanProperty var prioritizers: List[String]) {
+                      @BeanProperty var prioritizers: List[String],
+                      @BeanProperty var relatedConnections: Set[Connection] = Set()) {
   def this() = this("", "", 0, new ConnectionConfig(), "", "", -1, Nil)
+
+  def withConnection(connection: Connection): Connection = {
+    relatedConnections = relatedConnections + connection
+    this
+  }
 }
 
 trait ConnectionApiService {
   def find(connectionId: String, clientId: String): Future[Connection]
   def create(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
+  def createProcessorConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
+  def createStdConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
+  def remove(connection: Connection, version: Long, clientId: String): Future[Boolean]
 }
 
 // --- Connection Models/ API End ---
@@ -176,14 +186,42 @@ trait ProvenanceApiService {
 
 // --- Flow Data Models / API start ---
 
+case class IOPort(@BeanProperty id: String,
+                  @BeanProperty name: String,
+                  @BeanProperty version: Long,
+                  @BeanProperty `type`: String,
+                  @BeanProperty status: String)
+
 trait IFlowDataService {
   def provenanceByComponentId(cid: String, maxResults: Int): util.List[Provenance]
 }
 
 // --- Flow Data Models / API end ---
 
+// --- Flow IO Port Models / API start ---
+
+trait IOPortApiService {
+  def inputPort(id: String): Future[IOPort]
+  def outputPort(id: String): Future[IOPort]
+  def createInputPort(processGroupId: String, clientId: String): Future[Connection]
+  def createOutputPort(processGroupId: String, clientId: String): Future[Connection]
+  def deleteInputPort(inputPortId: String, version: Long, clientId: String): Future[Option[IOPort]]
+  def deleteInputPort(rootPortId: String,
+                      inputPortId: String,
+                      version: Long,
+                      clientId: String): Future[Boolean]
+  def deleteOutputPort(outputPortId: String, version: Long, clientId: String):  Future[Option[IOPort]]
+  def deleteOutputPort(outputPortId: String,
+                       rootPortId: String,
+                       version: Long,
+                       clientId: String): Future[Boolean]
+}
+
+// --- Flow IO Port Models / API end ---
+
 object FlowComponent {
   val ProcessorType = "PROCESSOR"
+  val ExternalProcessorType = "EXTERNAL_PROCESSOR"
   val RemoteInputPortType = "REMOTE_INPUT_PORT"
   val RemoteOutputPortType = "REMOTE_OUTPUT_PORT"
   val InputPortType = "INPUT_PORT"
