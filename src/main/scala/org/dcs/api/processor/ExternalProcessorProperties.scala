@@ -8,8 +8,8 @@ object ExternalProcessorProperties {
   val ReceiverKey = "_EXTERNAL_RECEIVER"
   val SenderKey = "_EXTERNAL_SENDER"
 
-  val RootInputPortIdKey = "_ROOT_INPUT_PORT_ID"
-  val RootOutputPortIdKey = "_ROOT_OUTPUT_PORT_ID"
+  val RootInputConnectionKey = "_ROOT_INPUT_CONNECTION"
+  val RootOutputConnectionKey = "_ROOT_OUTPUT_CONNECTION"
 
   val NifiUrlKey = "nifiUrl"
   val NifiPortName = "portName"
