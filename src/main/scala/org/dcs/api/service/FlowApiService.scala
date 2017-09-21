@@ -111,6 +111,11 @@ trait ProcessorApiService {
   def start(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def stop(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def remove(processorId: String, version: Long, clientId: String): Future[Boolean]
+  def remove(processorId: String,
+             flowInstanceId: String,
+             processorType: String,
+             version: Long,
+             clientId: String): Future[Boolean]
 }
 
 
@@ -133,6 +138,7 @@ case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
                             @BeanProperty var selectedRelationships: Set[String] = Set(),
                             @BeanProperty var availableRelationships: Set[String] = Set()) {
   def this() = this("", Connectable("", "", ""), Connectable("", "", ""))
+  def genId(): String = source.id + "-" + destination.id
 }
 
 case class Connection(@BeanProperty var id: String,
@@ -159,7 +165,7 @@ trait ConnectionApiService {
   def createStdConnection(connectionConfig: ConnectionConfig, clientId: String): Future[Connection]
   def update(connection: Connection, clientId: String): Future[Connection]
   def remove(connectionId: String, version: Long, clientId: String): Future[Boolean]
-  def remove(connection: Connection, version: Long, clientId: String): Future[Boolean]
+  def remove(connection: Connection, clientId: String): Future[Boolean]
 }
 
 // --- Connection Models/ API End ---
