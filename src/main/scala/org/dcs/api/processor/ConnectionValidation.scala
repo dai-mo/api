@@ -7,9 +7,18 @@ object ConnectionValidation {
 
   def validate(connectionConfig: ConnectionConfig): Unit = {
     (connectionConfig.source.componentType, connectionConfig.destination.componentType) match {
-      case (FlowComponent.ProcessorType, FlowComponent.ProcessorType) => validateProcessorConnection(connectionConfig)
+      case (FlowComponent.ProcessorType, FlowComponent.ProcessorType) |
+           (FlowComponent.ProcessorType, FlowComponent.ExternalProcessorType) |
+           (FlowComponent.ExternalProcessorType, FlowComponent.ProcessorType) => validateProcessorConnection(connectionConfig)
+      case _ => exception(connectionConfig.source.componentType, connectionConfig.destination.componentType)
     }
+
   }
+
+  def exception(sourceType: String, destinationType: String) =
+    ErrorConstants.DCS315
+      .withDescription("Cannot connect processor of type " + sourceType + " to processor of type " + destinationType)
+      .exception()
 
   def  validateProcessorConnection(connectionConfig: ConnectionConfig): Unit = {
     val sourceProcessorType = connectionConfig.source.properties.get(CoreProperties.ProcessorTypeKey)
@@ -22,12 +31,10 @@ object ConnectionValidation {
 
     if(sourceProcessorType.isDefined && destinationProcessorType.isDefined) {
       (sourceProcessorType.get, destinationProcessorType.get) match  {
-        case (RemoteProcessor.WorkerProcessorType, RemoteProcessor.IngestionProcessorType) =>
-          throw exception(RemoteProcessor.WorkerProcessorType, RemoteProcessor.IngestionProcessorType)
-        case (RemoteProcessor.SinkProcessorType, RemoteProcessor.IngestionProcessorType) =>
-          throw exception(RemoteProcessor.SinkProcessorType, RemoteProcessor.IngestionProcessorType)
-        case (RemoteProcessor.SinkProcessorType, RemoteProcessor.WorkerProcessorType) =>
-          throw exception(RemoteProcessor.SinkProcessorType, RemoteProcessor.WorkerProcessorType)
+        case (source, RemoteProcessor.IngestionProcessorType) =>
+          throw exception(source, RemoteProcessor.IngestionProcessorType)
+        case (RemoteProcessor.SinkProcessorType, destination) =>
+          throw exception(RemoteProcessor.SinkProcessorType, destination)
         case _ => // do nothing
       }
     } else

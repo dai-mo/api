@@ -48,7 +48,7 @@ object ProcessorValidation {
           SchemaValidation.schemaChecks(SchemaValidation.AllSchemaFieldsExists,
             processorName,
             processorId,
-            writeSchema.get,
+            readSchema.get,
             CoreProperties.FieldsToMapKey,
             value,
             propertyDefinitions.find(_.name == CoreProperties.FieldsToMapKey).get.defaultValue)
@@ -57,7 +57,7 @@ object ProcessorValidation {
           SchemaValidation.schemaChecks(SchemaValidation.AtLeastOneSchemaFieldExists,
             processorName,
             processorId,
-            writeSchema.get,
+            readSchema.get,
             CoreProperties.FieldActionsKey,
             value,
             propertyDefinitions.find(_.name == CoreProperties.FieldActionsKey).get.defaultValue) ++
