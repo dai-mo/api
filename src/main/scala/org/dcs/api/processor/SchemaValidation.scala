@@ -112,8 +112,13 @@ object SchemaValidation {
       processorFields.asList[ProcessorSchemaField]
         .filter(f => f.fieldType.nonEmpty &&
           SchemaField.find(schema, f.jsonPath).exists(sf => {
-            if (sf.schema().getType.getName == PropertyType.Union)
+            val schemaType = sf.schema().getType.getName
+            if (schemaType == PropertyType.Union)
               sf.schema().getTypes.get(1).getType.getName != f.fieldType
+            else if(f.fieldType == PropertyType.Double)
+              schemaType != PropertyType.Int &&
+                schemaType != PropertyType.Float &&
+                schemaType != PropertyType.Double
             else
               sf.schema().getType.getName != f.fieldType
           }))

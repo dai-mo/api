@@ -28,6 +28,10 @@ case class WithArgs(target: String, args: Map[String, String]) {
       throw new IllegalArgumentException("No value of argument key " + argKey)
   }
 
+  def contains(argKey: String): Option[String] = {
+    args.get(argKey)
+  }
+
   override def toString(): String = {
     return target +
       (if(args.nonEmpty)

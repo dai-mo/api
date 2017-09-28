@@ -8,8 +8,11 @@ object ExternalProcessorProperties {
   val ReceiverKey = "_EXTERNAL_RECEIVER"
   val SenderKey = "_EXTERNAL_SENDER"
 
-  val RootInputConnectionKey = "_ROOT_INPUT_CONNECTION"
-  val RootOutputConnectionKey = "_ROOT_OUTPUT_CONNECTION"
+  val RootInputConnectionIdKey = "_ROOT_INPUT_CONNECTION_ID"
+  val RootOutputConnectionIdKey = "_ROOT_OUTPUT_CONNECTION_ID"
+
+  val InputPortNameKey = "_INPUT_PORT_NAME"
+  val OutputPortNameKey = "_OUTPUT_PORT_NAME"
 
   val NifiUrlKey = "nifiUrl"
   val NifiPortName = "portName"
@@ -25,4 +28,6 @@ object ExternalProcessorProperties {
       Map(NifiUrlKey -> nifiApiBaseUrl, NifiPortName -> inputPortName))
       .toString()
   }
+
+
 }
