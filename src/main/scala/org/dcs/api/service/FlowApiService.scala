@@ -29,8 +29,15 @@ case class FlowInstance(@BeanProperty var id: String,
     connections.filter(_.config.isExternal())
   }
 
-  def hasExternal: Boolean =
+  def externalProcessors: List[ProcessorInstance] = {
+    processors.filter(_.isExternal)
+  }
+
+  def hasExternalConnection: Boolean =
     connections.exists(_.config.isExternal())
+
+  def hasExternalProcessors: Boolean =
+    processors.exists(_.isExternal)
 
   def rootPortIdVersions: Map[String, String] = connections.flatMap(_.rootPortIdVersions()).toMap
 }
@@ -76,6 +83,11 @@ case class ProcessorConfig(@BeanProperty var bulletinLevel: String,
   def this() = this("", "", 1, "", "", "", "")
 }
 
+object ProcessorInstance {
+  def isExternal(processorType: String): Boolean =
+    processorType == RemoteProcessor.ExternalProcessorType || processorType == RemoteProcessor.InputPortIngestionType
+}
+
 case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var name: String,
                              @BeanProperty var `type`: String,
@@ -88,6 +100,9 @@ case class ProcessorInstance(@BeanProperty var id: String,
                              @BeanProperty var validationErrors: ValidationErrorResponse,
                              @BeanProperty var config: ProcessorConfig) {
   def this() = this("", "", "", "", "", 0.0.toLong, Map(), Nil, Set(), null, new ProcessorConfig())
+
+  def isExternal: Boolean =
+    ProcessorInstance.isExternal(processorType)
 }
 
 case class ProcessorType(@BeanProperty var pType:String,
@@ -146,6 +161,13 @@ case class Connectable(@BeanProperty var id: String,
   def this() = this("", "", "", Map(), "")
 }
 
+object ConnectionConfig {
+  def inputPortIngestionConnection(flowInstanceId: String, processorId: String, processorName: String) =
+    new ConnectionConfig(flowInstanceId,
+      Connectable("", "", ""),
+      Connectable(processorId, FlowComponent.InputPortIngestionType, flowInstanceId, name = processorName))
+}
+
 case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
                             @BeanProperty var source: Connectable,
                             @BeanProperty var destination: Connectable,
@@ -155,7 +177,9 @@ case class ConnectionConfig(@BeanProperty var flowInstanceId: String,
   def genId(): String = source.id + "-" + destination.id
   def isExternal(): Boolean =
     if(source.componentType == FlowComponent.ExternalProcessorType ||
-      destination.componentType == FlowComponent.ExternalProcessorType)
+      destination.componentType == FlowComponent.ExternalProcessorType ||
+      source.componentType == FlowComponent.InputPortIngestionType ||
+      destination.componentType == FlowComponent.InputPortIngestionType)
       true
     else
       false
@@ -279,9 +303,11 @@ case class DropRequest(@BeanProperty var id: String,
 object FlowComponent {
   val ProcessorType = "PROCESSOR"
   val ExternalProcessorType = "EXTERNAL_PROCESSOR"
+  val InputPortIngestionType = "INPUT_PORT_INGESTION_TYPE"
   val RemoteInputPortType = "REMOTE_INPUT_PORT"
   val RemoteOutputPortType = "REMOTE_OUTPUT_PORT"
   val InputPortType = "INPUT_PORT"
   val OutputPortType = "OUTPUT_PORT"
   val FunnelType = "FUNNEL"
+
 }
