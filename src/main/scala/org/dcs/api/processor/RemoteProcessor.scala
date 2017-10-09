@@ -2,15 +2,16 @@ package org.dcs.api.processor
 
 import java.nio.ByteBuffer
 import java.util
-import java.util.{Map => JavaMap}
+import java.util.{List => JavaList, Map => JavaMap}
 
 import com.google.common.net.MediaType
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericFixed, GenericRecord}
+import org.dcs.api.processor.RelationshipType.Success
 import org.dcs.api.service.ProcessorDetails
 import org.dcs.commons.error.{ErrorConstants, ErrorResponse}
 import org.dcs.commons.serde.AvroImplicits._
-import org.dcs.commons.serde.AvroSchemaStore
+import org.dcs.commons.serde.{AvroSchemaStore, DataGenerator}
 
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
@@ -27,6 +28,7 @@ object RemoteProcessor {
   val SinkProcessorType = "sink"
   val BatchProcessorType = "batch"
   val ExternalProcessorType = "external"
+  val InputPortIngestionType = "input-port-ingestion"
 
 
   def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
@@ -309,7 +311,6 @@ trait Sink extends RemoteProcessor {
 }
 
 trait External extends RemoteProcessor {
-  // if(schemaId != null && !schemaId.isEmpty) AvroSchemaStore.add(schemaId)
 
   override def processorType(): String = RemoteProcessor.ExternalProcessorType
 
@@ -326,6 +327,51 @@ trait External extends RemoteProcessor {
     throw new UnsupportedOperationException
 
   override def schemaId: String = className
+
+  override def properties(): JavaList[RemoteProperty] = {
+    val props = new util.ArrayList(super.properties())
+
+    props.add(ExternalProcessorProperties.rootOutputConnectionIdProperty)
+    props.add(ExternalProcessorProperties.outputPortNameProperty)
+    props.add(ExternalProcessorProperties.receiverProperty)
+    props.add(ExternalProcessorProperties.rootInputConnectionIdProperty)
+    props.add(ExternalProcessorProperties.inputPortNameProperty)
+    props.add(ExternalProcessorProperties.senderProperty)
+
+    props
+  }
+
+}
+
+trait InputPortIngestion extends RemoteProcessor {
+
+  override def processorType(): String = RemoteProcessor.InputPortIngestionType
+
+  override def configuration: Configuration = Configuration(inputMimeType = MediaType.OCTET_STREAM.toString,
+    outputMimeType = MediaType.OCTET_STREAM.toString,
+    processorClassName =  className,
+    inputRequirementType = InputRequirementType.InputRequired)
+
+  override def properties(): JavaList[RemoteProperty] = {
+    val props = new util.ArrayList(super.properties())
+
+    props.add(ExternalProcessorProperties.rootInputConnectionIdProperty)
+    props.add(ExternalProcessorProperties.inputPortNameProperty)
+
+    props
+  }
+
+  override final def _relationships(): Set[RemoteRelationship] = {
+    Set(Success)
+  }
+
+  override final def execute(record: Option[GenericRecord], properties: util.Map[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
+    List(Right(Success.id, record.get))
+  }
+
+  def readSchema(properties: util.Map[String, String]): String
+
+  override final def schemaId: String = ""
 
 }
 
