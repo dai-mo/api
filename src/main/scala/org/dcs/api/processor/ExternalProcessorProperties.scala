@@ -12,6 +12,8 @@ object ExternalProcessorProperties {
   val RootInputConnectionIdKey = "_ROOT_INPUT_CONNECTION_ID"
   val RootOutputConnectionIdKey = "_ROOT_OUTPUT_CONNECTION_ID"
 
+  val RootInputPortIdKey = "_ROOT_INPUT_PORT_ID"
+
   val InputPortNameKey = "_INPUT_PORT_NAME"
   val OutputPortNameKey = "_OUTPUT_PORT_NAME"
 
@@ -33,44 +35,51 @@ object ExternalProcessorProperties {
   }
 
   def rootOutputConnectionIdProperty =  remoteProperty(ExternalProcessorProperties.RootOutputConnectionIdKey,
-    "Id of root output port [Level" + PropertyLevel.Open + "]",
+    "Id of root output port.",
     "",
     isRequired = true,
     isDynamic = false,
-    PropertyLevel.Open)
+    PropertyLevel.ExternalProcessorProperty.id)
 
   def outputPortNameProperty =  remoteProperty(ExternalProcessorProperties.OutputPortNameKey,
-    "Name of flow instance output port [Level" + PropertyLevel.Open + "]",
+    "Name of flow instance output port.",
     "",
     isRequired = true,
     isDynamic = false,
-    PropertyLevel.Open)
+    PropertyLevel.ExternalProcessorProperty.id)
 
   def receiverProperty =  remoteProperty(ExternalProcessorProperties.ReceiverKey,
-    "Id of receiver for external processor [Level" + PropertyLevel.Open + "]",
+    "Id of receiver for external processor.",
     "",
     isRequired = true,
     isDynamic = false,
-    PropertyLevel.Open)
+    PropertyLevel.ExternalProcessorProperty.id)
 
   def rootInputConnectionIdProperty =  remoteProperty(ExternalProcessorProperties.RootInputConnectionIdKey,
-    "Id of root input port [Level" + PropertyLevel.Open + "]",
+    "Id of root input connection.",
     "",
     isRequired = true,
     isDynamic = false,
-    PropertyLevel.Open)
+    PropertyLevel.ExternalProcessorProperty.id)
 
   def inputPortNameProperty =  remoteProperty(ExternalProcessorProperties.InputPortNameKey,
-    "Name of flow instance input port [Level" + PropertyLevel.Open + "]",
+    "Name of flow instance input port.",
     "",
     isRequired = true,
     isDynamic = false,
-    PropertyLevel.Open)
+    PropertyLevel.ExternalProcessorProperty.id)
+
+  def rootInputPortIdProperty =  remoteProperty(ExternalProcessorProperties.RootInputPortIdKey,
+    "Id of root input port.",
+    "",
+    isRequired = true,
+    isDynamic = false,
+    PropertyLevel.ExternalProcessorProperty.id)
 
   def senderProperty =  remoteProperty(ExternalProcessorProperties.SenderKey,
-    "Id of sender for external processor [Level" + PropertyLevel.Open + "]",
+    "Id of sender for external processor.",
     "",
     isRequired = true,
     isDynamic = false,
-    PropertyLevel.Open)
+    PropertyLevel.ExternalProcessorProperty.id)
 }

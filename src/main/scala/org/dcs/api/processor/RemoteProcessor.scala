@@ -31,40 +31,40 @@ object RemoteProcessor {
   val InputPortIngestionType = "input-port-ingestion"
 
 
-  def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
-    var schema = coreProperties.readSchema
-
-    if (schema.isEmpty) {
-      schema = coreProperties.readSchemaId.flatMap(AvroSchemaStore.get)
-    }
-
-    schema
-  }
-
-  def resolveReadSchema(properties: JavaMap[String, String]): Option[Schema] = {
-    resolveReadSchema(CoreProperties(properties.asScala.toMap))
-  }
-
-  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): Option[Schema] = {
-    var schema = coreProperties.writeSchema
-
-    if(schema.isEmpty) {
-      schema =  coreProperties.writeSchemaId.flatMap(AvroSchemaStore.get)
-    }
-
-    if(schema.isEmpty) {
-      schema = schemaId.flatMap(AvroSchemaStore.get)
-    }
-
-    if(schema.isEmpty)
-      resolveReadSchema(coreProperties)
-    else
-      schema
-  }
-
-  def resolveWriteSchema(properties: JavaMap[String, String], schemaId: Option[String]): Option[Schema] = {
-    resolveWriteSchema(CoreProperties(properties.asScala.toMap), schemaId)
-  }
+//  def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
+//    var schema = coreProperties.readSchema
+//
+//    if (schema.isEmpty) {
+//      schema = coreProperties.readSchemaId.flatMap(AvroSchemaStore.get)
+//    }
+//
+//    schema
+//  }
+//
+//  def resolveReadSchema(properties: JavaMap[String, String]): Option[Schema] = {
+//    resolveReadSchema(CoreProperties(properties.asScala.toMap))
+//  }
+//
+//  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): Option[Schema] = {
+//    var schema = coreProperties.writeSchema
+//
+//    if(schema.isEmpty) {
+//      schema =  coreProperties.writeSchemaId.flatMap(AvroSchemaStore.get)
+//    }
+//
+//    if(schema.isEmpty) {
+//      schema = schemaId.flatMap(AvroSchemaStore.get)
+//    }
+//
+//    if(schema.isEmpty)
+//      resolveReadSchema(coreProperties)
+//    else
+//      schema
+//  }
+//
+//  def resolveWriteSchema(properties: JavaMap[String, String], schemaId: Option[String]): Option[Schema] = {
+//    resolveWriteSchema(CoreProperties(properties.asScala.toMap), schemaId)
+//  }
 
   def resolveSchemas(hasInput: Boolean,
                      properties: JavaMap[String, String],
@@ -72,12 +72,12 @@ object RemoteProcessor {
                      schemaId: String): (Option[Schema], Option[Schema]) = {
     val coreProperties: CoreProperties = CoreProperties(properties.asScala.toMap)
 
-    var readSchema = resolveReadSchema(coreProperties)
+    val readSchema = coreProperties.resolveReadSchema
     if(hasInput && readSchema.isEmpty)
       throw new IllegalStateException("Read Schema for  " + className + " not available")
 
 
-    val writeSchema = resolveWriteSchema(coreProperties, Option(schemaId))
+    val writeSchema = coreProperties.resolveWriteSchema(Option(schemaId))
     if(writeSchema.isEmpty)
       throw new IllegalStateException("Write Schema for  " + className + " not available")
     (readSchema, writeSchema)
@@ -132,7 +132,8 @@ object RemoteProcessor {
 }
 
 trait RemoteProcessor extends BaseProcessor
-  with ProcessorDefinition {
+  with ProcessorDefinition
+  with GlobalControl {
 
   import RemoteProcessor._
 
@@ -141,7 +142,6 @@ trait RemoteProcessor extends BaseProcessor
   def resolveSchemas(hasInput: Boolean, properties: JavaMap[String, String]): (Option[Schema], Option[Schema]) = {
     RemoteProcessor.resolveSchemas(hasInput, properties, className, schemaId)
   }
-
 
   def trigger(input: Array[Byte], properties: JavaMap[String, String]): Array[Array[Byte]] = {
 
@@ -160,7 +160,9 @@ trait RemoteProcessor extends BaseProcessor
 
   def className: String = this.getClass.getName
 
-  def schemaId: String = null
+  def readSchema(properties: util.Map[String, String]): String = ""
+
+  override def schemaId: String = null
 
   // The methods 'resolveReadSchema' and 'resolveWriteSchema' should ideally be implemented
   // in the RemoteProcessor sub traits (Ingestion, Worker, ...)
@@ -357,6 +359,7 @@ trait InputPortIngestion extends RemoteProcessor {
 
     props.add(ExternalProcessorProperties.rootInputConnectionIdProperty)
     props.add(ExternalProcessorProperties.inputPortNameProperty)
+    props.add(ExternalProcessorProperties.rootInputPortIdProperty)
 
     props
   }
@@ -369,9 +372,8 @@ trait InputPortIngestion extends RemoteProcessor {
     List(Right(Success.id, record.get))
   }
 
-  def readSchema(properties: util.Map[String, String]): String
 
-  override final def schemaId: String = ""
+  override final def schemaId: String = null
 
 }
 

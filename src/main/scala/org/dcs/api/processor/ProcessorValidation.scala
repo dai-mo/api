@@ -23,11 +23,14 @@ object ProcessorValidation {
       None
   }
 
+  def hasWriteSchema(properties: Map[String, String]): Boolean =
+    CoreProperties(properties).resolveWriteSchema().nonEmpty
+
 
   def validate(processorId: String, properties: Map[String, String], propertyDefinitions: List[RemoteProperty]): Option[ValidationErrorResponse] = {
     val coreProperties = CoreProperties(properties)
-    var validationInfo: List[Map[String, String]] = Nil
 
+    var validationInfo: List[Map[String, String]] = Nil
 
     val processorName = properties(ProcessorClassKey)
 

@@ -44,8 +44,8 @@ case class RemoteProperty(@BeanProperty var displayName: String,
                           @BeanProperty var dynamic: Boolean = false,
                           @BeanProperty var validators: JavaList[String]= List[String]().asJava,
                           @BeanProperty var `type`: String = PropertyType.String,
-                          @BeanProperty var level: Int = PropertyLevel.Open) {
-  def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String, PropertyLevel.Open)
+                          @BeanProperty var level: Int = PropertyLevel.OpenProperty.id) {
+  def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String, PropertyLevel.OpenProperty.id)
 }
 
 case class PossibleValue(@BeanProperty var value: String,
@@ -73,10 +73,12 @@ object PropertyType {
   val Number = "NUMBER"
 }
 
-object PropertyLevel {
-  val Open = 0
-  val Expert = 10
-  val Internal = 100
+object PropertyLevel extends Enumeration {
+  val ClosedProperty = Value(0)
+  val ProcessorCoreProperty = Value(1)
+  val ProcessorSchemaProperty = Value(2)
+  val ExternalProcessorProperty = Value(3)
+  val OpenProperty = Value(100)
 }
 
 
