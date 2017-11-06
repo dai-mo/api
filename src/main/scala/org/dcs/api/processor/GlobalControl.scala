@@ -7,7 +7,7 @@ import java.util
   */
 trait GlobalControl {
 
-  def start(properties: util.Map[String, String]): Boolean = true
-  def stop(properties: util.Map[String, String]): Boolean = true
-  def remove(properties: util.Map[String, String]): Boolean = true
+  def preStart(properties: util.Map[String, String]): Boolean = true
+  def preStop(properties: util.Map[String, String]): Boolean = true
+  def postRemove(properties: util.Map[String, String]): Boolean = true
 }

@@ -72,7 +72,7 @@ object ExternalProcessorProperties {
   def rootInputPortIdProperty =  remoteProperty(ExternalProcessorProperties.RootInputPortIdKey,
     "Id of root input port.",
     "",
-    isRequired = true,
+    isRequired = false,
     isDynamic = false,
     PropertyLevel.ExternalProcessorProperty.id)
 

@@ -132,11 +132,12 @@ trait ProcessorApiService {
   def autoTerminateRelationship(connection: Connection): Future[ProcessorInstance]
   def update(processorInstance: ProcessorInstance, clientId: String): Future[ProcessorInstance]
   def updateProperties(processorId: String, properties: Map[String, String], clientId : String): Future[ProcessorInstance]
+  def updateSchemaProperty(processorId: String, schemaPropertyKey: String, schema: String, clientId : String): Future[ProcessorInstance]
   def updateSchema(flowInstanceId: String,
                    processorInstanceId: String,
                    schemaActions: List[SchemaAction],
                    clientId: String): Future[List[ProcessorInstance]]
-  def instance(processorId: String): Future[ProcessorInstance]
+  def instance(processorId: String, validate: Boolean = true): Future[ProcessorInstance]
   def start(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def stop(processorId: String, version: Long, clientId: String): Future[ProcessorInstance]
   def remove(processorId: String, version: Long, clientId: String): Future[Boolean]

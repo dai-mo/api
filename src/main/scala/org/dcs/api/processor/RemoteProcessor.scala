@@ -1,6 +1,7 @@
 package org.dcs.api.processor
 
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.util
 import java.util.{List => JavaList, Map => JavaMap}
 
@@ -31,40 +32,40 @@ object RemoteProcessor {
   val InputPortIngestionType = "input-port-ingestion"
 
 
-//  def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
-//    var schema = coreProperties.readSchema
-//
-//    if (schema.isEmpty) {
-//      schema = coreProperties.readSchemaId.flatMap(AvroSchemaStore.get)
-//    }
-//
-//    schema
-//  }
-//
-//  def resolveReadSchema(properties: JavaMap[String, String]): Option[Schema] = {
-//    resolveReadSchema(CoreProperties(properties.asScala.toMap))
-//  }
-//
-//  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): Option[Schema] = {
-//    var schema = coreProperties.writeSchema
-//
-//    if(schema.isEmpty) {
-//      schema =  coreProperties.writeSchemaId.flatMap(AvroSchemaStore.get)
-//    }
-//
-//    if(schema.isEmpty) {
-//      schema = schemaId.flatMap(AvroSchemaStore.get)
-//    }
-//
-//    if(schema.isEmpty)
-//      resolveReadSchema(coreProperties)
-//    else
-//      schema
-//  }
-//
-//  def resolveWriteSchema(properties: JavaMap[String, String], schemaId: Option[String]): Option[Schema] = {
-//    resolveWriteSchema(CoreProperties(properties.asScala.toMap), schemaId)
-//  }
+  //  def resolveReadSchema(coreProperties: CoreProperties): Option[Schema] = {
+  //    var schema = coreProperties.readSchema
+  //
+  //    if (schema.isEmpty) {
+  //      schema = coreProperties.readSchemaId.flatMap(AvroSchemaStore.get)
+  //    }
+  //
+  //    schema
+  //  }
+  //
+  //  def resolveReadSchema(properties: JavaMap[String, String]): Option[Schema] = {
+  //    resolveReadSchema(CoreProperties(properties.asScala.toMap))
+  //  }
+  //
+  //  def resolveWriteSchema(coreProperties: CoreProperties, schemaId: Option[String]): Option[Schema] = {
+  //    var schema = coreProperties.writeSchema
+  //
+  //    if(schema.isEmpty) {
+  //      schema =  coreProperties.writeSchemaId.flatMap(AvroSchemaStore.get)
+  //    }
+  //
+  //    if(schema.isEmpty) {
+  //      schema = schemaId.flatMap(AvroSchemaStore.get)
+  //    }
+  //
+  //    if(schema.isEmpty)
+  //      resolveReadSchema(coreProperties)
+  //    else
+  //      schema
+  //  }
+  //
+  //  def resolveWriteSchema(properties: JavaMap[String, String], schemaId: Option[String]): Option[Schema] = {
+  //    resolveWriteSchema(CoreProperties(properties.asScala.toMap), schemaId)
+  //  }
 
   def resolveSchemas(hasInput: Boolean,
                      properties: JavaMap[String, String],
@@ -160,7 +161,9 @@ trait RemoteProcessor extends BaseProcessor
 
   def className: String = this.getClass.getName
 
-  def readSchema(properties: util.Map[String, String]): String = ""
+  def resolveProperties(properties: util.Map[String, String]): util.Map[String, String] = _resolveProperties(properties.asScala.toMap).asJava
+
+  def _resolveProperties(properties: Map[String, String]): Map[String, String] = properties
 
   override def schemaId: String = null
 
@@ -181,6 +184,21 @@ trait RemoteProcessor extends BaseProcessor
   //    case _ => throw new IllegalStateException("Unknown processor type : " + processorType)
   //  }
 
+
+  def cast[T](obj: Object, fieldType: String): T =
+    obj match {
+      case no: Number => {
+        val no: Number = obj.asInstanceOf[Number]
+        fieldType match {
+          case PropertyType.Double => no.doubleValue().asInstanceOf[T]
+          case PropertyType.Int => no.intValue().asInstanceOf[T]
+          case PropertyType.Long => no.longValue().asInstanceOf[T]
+          case PropertyType.Float => no.longValue().asInstanceOf[T]
+          case _ => no.asInstanceOf[T]
+        }
+      }
+      case _ => obj.asInstanceOf[T]
+    }
 
   implicit class GenericRecordFields(record: Option[GenericRecord]) {
     def asDouble(key: String): Option[Double] =
@@ -250,13 +268,10 @@ trait RemoteProcessor extends BaseProcessor
 
     def asList[T]: Option[List[T]] = value.map(_.asInstanceOf[List[T]])
 
-    def asTupleList[T]: Option[List[(String, T)]] =  value.map(_.asInstanceOf[List[(String,T)]])
-      .map(d => d.map(r => (r._1.toString, r._2.asInstanceOf[T])))
-
     def asMap[K, V]: Option[Map[K, V]] = value.map(_.asInstanceOf[util.HashMap[K, V]].asScala.toMap)
+      .map(d => d.map(r => r._1.asInstanceOf[K] -> r._2.asInstanceOf[V]))
 
     def asGenericFixed: Option[GenericFixed] = value.map(_.asInstanceOf[GenericFixed])
-
 
   }
 

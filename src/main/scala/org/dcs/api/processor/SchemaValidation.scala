@@ -118,6 +118,7 @@ object SchemaValidation {
             else if(f.fieldType == PropertyType.Double)
               schemaType != PropertyType.Int &&
                 schemaType != PropertyType.Float &&
+                schemaType != PropertyType.Long &&
                 schemaType != PropertyType.Double
             else
               sf.schema().getType.getName != f.fieldType

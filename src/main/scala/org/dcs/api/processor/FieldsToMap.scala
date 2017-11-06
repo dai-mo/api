@@ -20,9 +20,13 @@ case class ProcessorSchemaField(@BeanProperty name: String,
   def this() = this("", PropertyType.String, "")
 }
 
+case class MappedValue(jsonPath: String, value: Object, fieldType: String)
+
 trait FieldsToMap extends RemoteProcessor {
 
   def fields: Set[ProcessorSchemaField]
+
+
 
   override def properties(): JavaList[RemoteProperty] = {
     val props = new util.ArrayList(super.properties())
@@ -32,34 +36,42 @@ trait FieldsToMap extends RemoteProcessor {
     props
   }
 
-  def mappings(record: Option[GenericRecord], properties: Map[String, String]): Map[String, List[(String, Object)]] =
+  def mappings(record: Option[GenericRecord], properties: Map[String, String]): Map[String, List[MappedValue]] =
     record.mappings(properties.asJava)
 
   implicit class GenericRecordTypes(record: Option[GenericRecord]) {
 
-    def mappings(properties: JavaMap[String, String]): Map[String, List[(String, Object)]] = {
+    def mappings(properties: JavaMap[String, String]): Map[String, List[MappedValue]] = {
 
       properties.asScala.
         find(p => p._1 == CoreProperties.FieldsToMapKey)
         .map(p => p._2.asList[ProcessorSchemaField])
-        .map(flist => flist.map(f => (f.name, (f.jsonPath, record.fromJsonPath(f.jsonPath))))
-          .map(f => (f._1, (f._2._1, f._2._2.flatMap(_.value))))
+        .map(flist => flist.map(f => (f.name, (f.jsonPath, record.fromJsonPath(f.jsonPath), f.fieldType)))
+          .map(f => (f._1, (f._2._1, f._2._2.flatMap(_.value), f._2._3)))
           .filter(fgr => fgr._2._2.isDefined)
-          .map(fgr => (fgr._1, (fgr._2._1, fgr._2._2.get)))
+          .map(fgr => (fgr._1, MappedValue(fgr._2._1, fgr._2._2.get, fgr._2._3)))
           .groupBy(k => k._1)
           .mapValues(t => t.map(_._2)))
         .getOrElse(Map())
     }
   }
 
-  implicit class MappingUtils(mappings: Option[List[(String, Object)]]) {
 
-    def values[T](): List[T] = {
-      mappings.map(m => m.map(_._2)).map(_.asInstanceOf[List[T]]).getOrElse(Nil)
+  implicit class MappingUtils(mappingValues: Option[List[MappedValue]]) {
+
+    def mappedValues[T](): List[(String,T)] = {
+      mappingValues.map(mvl => mvl.map(mv => (mv.jsonPath, cast[T](mv.value, mv.fieldType))))
+        .getOrElse(Nil)
     }
 
-    def asMap[T](): Map[String, Object] = {
-      mappings.map(_.toMap[String, Object]).getOrElse(Map())
+    def values[T](): List[T] = {
+      mappingValues.map(mvl => mvl.map(mv => cast[T](mv.value, mv.fieldType)))
+        .getOrElse(Nil)
+    }
+
+    def asMap[T](): Map[String, T] = {
+      mappingValues.map(mvl => mvl.map(mv => mv.jsonPath -> cast[T](mv.value, mv.fieldType)).toMap)
+        .getOrElse(Map())
     }
   }
 }
