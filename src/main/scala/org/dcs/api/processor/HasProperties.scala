@@ -1,5 +1,6 @@
 package org.dcs.api.processor
 
+import java.util
 import java.util.{List => JavaList, Map => JavaMap, Set => JavaSet}
 
 import scala.beans.BeanProperty
@@ -10,6 +11,11 @@ import org.apache.avro.Schema
 /**
   * Created by cmathew on 29/08/16.
   */
+
+object HasProperties {
+  val EmptyPossibleValue = ""
+}
+
 trait HasProperties {
 
   def processorType(): String
@@ -19,6 +25,8 @@ trait HasProperties {
       writeSchemaProperty() :: writeSchemaIdProperty(schemaId) ::
       processorTypeProperty(processorType()) ::
       _properties()).asJava
+
+
 
   protected def _properties(): List[RemoteProperty] =  Nil
 
@@ -38,14 +46,19 @@ case class RemoteProperty(@BeanProperty var displayName: String,
                           @BeanProperty var name: String,
                           @BeanProperty var description: String,
                           @BeanProperty var defaultValue: String = null,
-                          @BeanProperty var possibleValues: JavaSet[PossibleValue] = Set[PossibleValue]().asJava,
+                          @BeanProperty var possibleValues: JavaSet[PossibleValue] = new util.HashSet[PossibleValue](),
                           @BeanProperty var required: Boolean = false,
                           @BeanProperty var sensitive: Boolean = false,
                           @BeanProperty var dynamic: Boolean = false,
                           @BeanProperty var validators: JavaList[String]= List[String]().asJava,
                           @BeanProperty var `type`: String = PropertyType.String,
-                          @BeanProperty var level: Int = PropertyLevel.Open) {
-  def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String, PropertyLevel.Open)
+                          @BeanProperty var level: Int = PropertyLevel.OpenProperty.id) {
+  def this() = this("", "", "", "", Set[PossibleValue]().asJava, false, false, false, List().asJava, PropertyType.String, PropertyLevel.OpenProperty.id)
+
+  def setPossibleValuesWithDefault(pvs: Set[PossibleValue]): Unit = {
+    possibleValues = (pvs + PossibleValue(HasProperties.EmptyPossibleValue, "Choose ...", "Default Value")).asJava
+  }
+
 }
 
 case class PossibleValue(@BeanProperty var value: String,
@@ -64,8 +77,8 @@ object PropertyType {
   val String = Schema.Type.STRING.getName
   val Bytes = Schema.Type.BYTES.getName
   val Int = Schema.Type.INT.getName
-  val Long = Schema.Type.LONG.getName
   val Float = Schema.Type.FLOAT.getName
+  val Long = Schema.Type.LONG.getName
   val Double = Schema.Type.DOUBLE.getName
   val Boolean = Schema.Type.BOOLEAN.getName
   val Null = Schema.Type.NULL.getName
@@ -73,10 +86,12 @@ object PropertyType {
   val Number = "NUMBER"
 }
 
-object PropertyLevel {
-  val Open = 0
-  val Expert = 10
-  val Internal = 100
+object PropertyLevel extends Enumeration {
+  val ClosedProperty = Value(0)
+  val ProcessorCoreProperty = Value(1)
+  val ProcessorSchemaProperty = Value(2)
+  val ExternalProcessorProperty = Value(3)
+  val OpenProperty = Value(100)
 }
 
 

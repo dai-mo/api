@@ -23,11 +23,17 @@ object ProcessorValidation {
       None
   }
 
+  def hasWriteSchema(properties: Map[String, String]): Boolean =
+    CoreProperties(properties).resolveWriteSchema().nonEmpty
 
-  def validate(processorId: String, properties: Map[String, String], propertyDefinitions: List[RemoteProperty]): Option[ValidationErrorResponse] = {
+
+  def validate(processorId: String,
+               properties: Map[String, String],
+               propertyDefinitions: List[RemoteProperty],
+               checkAllPropertiesPresent: Boolean = true): Option[ValidationErrorResponse] = {
     val coreProperties = CoreProperties(properties)
-    var validationInfo: List[Map[String, String]] = Nil
 
+    var validationInfo: List[Map[String, String]] = Nil
 
     val processorName = properties(ProcessorClassKey)
 
@@ -77,13 +83,14 @@ object ProcessorValidation {
       p._1,
       pd.`type`)) ++ validationInfo
 
-    validationInfo = propertyDefinitions
-      .filter(pd => pd.required && !properties.exists(_._1 == pd.name))
-      .map(pd => ValidationErrorResponse.processorPropertyValidation(ErrorConstants.DCS313,
-        processorName,
-        processorId,
-        pd.name,
-        pd.`type`))  ++ validationInfo
+    if(checkAllPropertiesPresent)
+      validationInfo = propertyDefinitions
+        .filter(pd => pd.required && !properties.exists(_._1 == pd.name))
+        .map(pd => ValidationErrorResponse.processorPropertyValidation(ErrorConstants.DCS313,
+          processorName,
+          processorId,
+          pd.name,
+          pd.`type`))  ++ validationInfo
 
     // FIXME: Add validation for processor specific validators (via remote service)
 

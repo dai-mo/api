@@ -3,12 +3,13 @@ package org.dcs.api
 import java.util.{Map => JavaMap}
 
 import org.apache.avro.generic.{GenericData, GenericRecord}
-import org.dcs.api.processor.{FieldsToMap, _}
+import org.dcs.api.processor._
 import org.dcs.commons.error.ErrorResponse
 import org.dcs.commons.serde.{AvroSchemaStore, JsonPath}
 
 import scala.collection.JavaConverters._
 import org.dcs.commons.serde.JsonSerializerImplicits._
+
 
 /**
   * Created by cmathew on 22.03.17.
@@ -22,11 +23,13 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec with FieldsToMap {
 
     val defaultFieldsToMapPropertyMap = Map(CoreProperties.FieldsToMapKey -> List(ProcessorSchemaField(FirstNameKey, PropertyType.String),
       ProcessorSchemaField(MiddleNameKey, PropertyType.String),
-      ProcessorSchemaField(LastNameKey, PropertyType.String)).toJson)
+      ProcessorSchemaField(LastNameKey, PropertyType.String),
+      ProcessorSchemaField(AgeSchemaKey, PropertyType.Double)).toJson)
 
     val fieldsToMapPropertyMap = Map(CoreProperties.FieldsToMapKey -> List(ProcessorSchemaField(FirstNameKey, PropertyType.String, "$.name." + FirstNameSchemaKey),
       ProcessorSchemaField(MiddleNameKey, PropertyType.String, "$.name." + MiddleNameSchemaKey),
-      ProcessorSchemaField(LastNameKey, PropertyType.String, "$.name." + LastNameSchemaKey)).toJson)
+      ProcessorSchemaField(LastNameKey, PropertyType.String, "$.name." + LastNameSchemaKey),
+      ProcessorSchemaField(AgeSchemaKey, PropertyType.Double, "$." + AgeSchemaKey)).toJson)
 
     "validate fields to map with schema" in {
       assert(ProcessorValidation.schemaPathCheck("", "", schema.get, defaultFieldsToMapPropertyMap).isEmpty)
@@ -67,16 +70,21 @@ class FieldsToMapProcessorSpec extends ApiUnitWordSpec with FieldsToMap {
         fieldsToMapPropertyMap)
 
       val fnames = m.get(FirstNameKey)
+
       val fnamevals = fnames.values[String]
       assert(fnamevals.head == FirstName)
+
       val fnamejsonpaths = fnames.asMap().keys
       assert(fnamejsonpaths.head == JsonPath.Root + JsonPath.Sep + NameSchemaKey + JsonPath.Sep + FirstNameSchemaKey)
 
-      val mname = m(MiddleNameKey).map(_._2).asInstanceOf[List[String]]
+      val mname = m(MiddleNameKey).map(_.value).asInstanceOf[List[String]]
       assert(mname.head == MiddleName)
 
-      val lname = m(LastNameKey).map(_._2).asInstanceOf[List[String]]
+      val lname = m(LastNameKey).map(_.value).asInstanceOf[List[String]]
       assert(lname.head == LastName)
+
+      val age = m.get(AgeSchemaKey).values[Double]
+      assert(age.head == Age)
     }
 
     "return empty values for incorrect json path <-> record combinations" in {
@@ -147,7 +155,8 @@ class TestFieldsToMapProcessor extends Worker with FieldsToMap {
 
   override def fields: Set[ProcessorSchemaField] = Set(ProcessorSchemaField(FirstNameKey, PropertyType.String),
     ProcessorSchemaField(MiddleNameKey, PropertyType.String),
-    ProcessorSchemaField(LastNameKey, PropertyType.String))
+    ProcessorSchemaField(LastNameKey, PropertyType.String),
+    ProcessorSchemaField(AgeSchemaKey, PropertyType.Double))
 
   override def execute(record: Option[GenericRecord], properties: JavaMap[String, String]): List[Either[ErrorResponse, (String, AnyRef)]] = {
 

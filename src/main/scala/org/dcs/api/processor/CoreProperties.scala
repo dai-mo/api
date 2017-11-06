@@ -49,59 +49,59 @@ object CoreProperties {
 
   def readSchemaIdProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(ReadSchemaIdKey,
-      "Id of avro schema used to deserialise the input of this processor to a generic record [Level " + PropertyLevel.Internal + "]",
+      "Id of avro schema used to deserialise the input of this processor to a generic record.",
       defaultValue,
       isRequired = false,
       isDynamic = false,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorCoreProperty.id)
 
   def writeSchemaIdProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(WriteSchemaIdKey,
-      "Id of avro schema used to to serialise the output of this processor to a byte array [Level" + PropertyLevel.Internal + "]",
+      "Id of avro schema used to to serialise the output of this processor to a byte array.",
       defaultValue,
       isRequired = false,
       isDynamic = false,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorCoreProperty.id)
 
   def readSchemaProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(ReadSchemaKey,
-      "Avro read schema used to deserialise the byte array input of this processor to a generic record [Level" + PropertyLevel.Internal + "]",
+      "Avro read schema used to deserialise the byte array input of this processor to a generic record.",
       defaultValue,
       isRequired = false,
       isDynamic = true,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorCoreProperty.id)
 
   def writeSchemaProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(WriteSchemaKey,
-      "Avro schema used to serialise the output of this processor to a byte array [Level" + PropertyLevel.Internal + "]",
+      "Avro schema used to serialise the output of this processor to a byte array.",
       defaultValue,
       isRequired = false,
       isDynamic = true,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorCoreProperty.id)
 
   def fieldsToMapProperty(fields: Set[ProcessorSchemaField]): RemoteProperty =
     remoteProperty(FieldsToMapKey,
-      "Field <> JsonPath Mappings for fields required by this processor [Level" + PropertyLevel.Internal + "]",
+      "Field <> JsonPath Mappings for fields required by this processor.",
       fields.toJson,
       isRequired = true,
       isDynamic = false,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorSchemaProperty.id)
 
   def fieldActionsProperty(actions: Set[Action]): RemoteProperty =
     remoteProperty(FieldActionsKey,
-      "A list of actions mapped to json paths which are executed by the processor [Level" + PropertyLevel.Internal + "]",
+      "A list of actions mapped to json paths which are executed by the processor.",
       actions.toJson,
       isRequired = true,
       isDynamic = false,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorSchemaProperty.id)
 
   def processorTypeProperty(defaultValue: String = null): RemoteProperty =
     remoteProperty(ProcessorTypeKey,
-      "Type of processor [Level" + PropertyLevel.Internal + "]",
+      "Type of processor.",
       defaultValue,
       isRequired = true,
       isDynamic = false,
-      PropertyLevel.Internal)
+      PropertyLevel.ProcessorCoreProperty.id)
 
 
   def resetSchemaProperties(properties: Map[String, String]): Map[String, String] = {
@@ -142,12 +142,15 @@ class CoreProperties(properties: Map[String, String]) {
   }
 
 
-  def resolveWriteSchema(): Option[Schema] = {
-    var schema = writeSchema
+  def resolveWriteSchema(schemaId: Option[String] = None): Option[Schema] = {
+    var schema: Option[Schema] = writeSchema
 
     if(schema.isEmpty) {
       schema =  writeSchemaId.flatMap(AvroSchemaStore.get)
     }
+
+    if(schema.isEmpty && schemaId.nonEmpty)
+      schema = schemaId.flatMap(AvroSchemaStore.get)
 
     if(schema.isEmpty)
       resolveReadSchema()

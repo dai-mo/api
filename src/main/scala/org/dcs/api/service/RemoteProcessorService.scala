@@ -44,8 +44,20 @@ trait RemoteProcessorService extends RemoteProcessor
   override def details(): ProcessorDetails =
     getDef(instance()).details()
 
+  override def resolveProperties(properties: util.Map[String, String]): util.Map[String, String] =
+    instance().resolveProperties(properties)
+
   override def schemaId: String =
     instance().schemaId
+
+  override def preStart(properties: util.Map[String, String]): Boolean =
+    instance().preStart(properties)
+
+  override def preStop(properties: util.Map[String, String]): Boolean =
+    instance().preStop(properties)
+
+  override def postRemove(properties: util.Map[String, String]): Boolean =
+    instance().postRemove(properties)
 }
 
 
