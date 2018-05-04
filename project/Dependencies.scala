@@ -4,24 +4,24 @@ object Dependencies {
   lazy val scVersion          = "2.11.7"
 
   // Versions
-  lazy val dcsCommonsVersion  = "0.3.0"
-  lazy val dcsTestVersion     = "0.1.0"
+  lazy val dcsCommonsVersion  = "0.3.0"  
   lazy val avroVersion 			  = "1.8.1"
   lazy val guavaVersion       = "18.0"
   lazy val scalaTestVersion 	= "3.0.0"
+  lazy val mockitoVersion     = "1.10.19"
 
-  val dcsCommons      = "org.dcs"               % "org.dcs.commons"            % dcsCommonsVersion
-  val dcsTest         = "org.dcs"               % "org.dcs.test"               % dcsTestVersion
+  val dcsCommons      = "org.dcs"               % "org.dcs.commons"            % dcsCommonsVersion  
   val avro            = "org.apache.avro"       % "avro"                       % avroVersion
   val guava           = "com.google.guava"      % "guava"                      % guavaVersion
   val scalaTest       = "org.scalatest"         %% "scalatest"                 % scalaTestVersion
+  val mockitoAll      = "org.mockito"                      % "mockito-all"                        % mockitoVersion
 
   // Collect Api Dependencies
   val apiDependencies = Seq(
     dcsCommons      % "provided",
     avro            % "provided",
     guava,
-    dcsTest         % "test",
-    scalaTest       % "test"
+    scalaTest       % "test",
+    mockitoAll      % "test"
   )
 }

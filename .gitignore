@@ -177,4 +177,5 @@ tramp
 # Misc.
 .cache-main
 .cache-tests
-
+.m2
+.ivy2
