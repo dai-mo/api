@@ -1,0 +1,9 @@
+Category,License,Dependency,Notes
+Apache,"The Apache Software License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)",com.google.guava # guava # 18.0,
+Apache,"the Apache License, ASL Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)",org.scalactic # scalactic_2.11 # 3.0.0,
+Apache,"the Apache License, ASL Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)",org.scalatest # scalatest_2.11 # 3.0.0,
+BSD,BSD 3-Clause (http://www.scala-lang.org/license.html),org.scala-lang # scala-library # 2.11.7,
+BSD,BSD 3-Clause (http://www.scala-lang.org/license.html),org.scala-lang # scala-reflect # 2.11.7,
+BSD,BSD 3-clause (http://opensource.org/licenses/BSD-3-Clause),org.scala-lang.modules # scala-parser-combinators_2.11 # 1.0.4,
+BSD,BSD 3-clause (http://opensource.org/licenses/BSD-3-Clause),org.scala-lang.modules # scala-xml_2.11 # 1.0.5,
+MIT,The MIT License (http://github.com/mockito/mockito/blob/master/LICENSE),org.mockito # mockito-all # 1.10.19,
