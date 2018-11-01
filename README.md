@@ -1,8 +1,16 @@
-# Alambeek API Project
+# Daimo API Project
 
-Alambeek API Project
+This library brings together all apis and corresponding data models required by various components of the Daimo platform.
+
+## Features
+
+The main features of this project include,
+
+- Processor Service Apis
+- Flow Data Models
 
 # License
+
 Copyright (c) 2017-2018 brewlabs SAS
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,4 +22,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
